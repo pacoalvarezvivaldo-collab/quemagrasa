@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Quemagrasa">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d0d0f">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
 <title>Quemagrasa · v3</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
@@ -911,7 +912,11 @@ function applyTheme(k){
   document.querySelectorAll('.swatch').forEach(s=>s.classList.toggle('active', s.dataset.key===k));
 }
 function setWeight(v){ const n=parseFloat(v); if(!isNaN(n)&&n>0) userWeight=n; updateUI(); }
-function setMusicLink(v){ musicLink=v||"https://music.youtube.com/"; document.getElementById('music-btn').href=musicLink; }
+function setMusicLink(v){
+  v=(v||"").trim();
+  const safe = /^https?:\/\//i.test(v) ? v : "https://music.youtube.com/";
+  musicLink=safe; document.getElementById('music-btn').href=musicLink;
+}
 
 function toggleBgMode(){ bgMode=!bgMode;
   document.getElementById('bgmode-row').classList.toggle('on',bgMode);
@@ -1014,7 +1019,7 @@ async function loadSettings(){
   if([15,30,40].includes(c.durKey)) durKey=c.durKey;
   if(c.themeKey&&THEMES[c.themeKey]) themeKey=c.themeKey;
   if(c.userWeight>0) userWeight=c.userWeight;
-  if(c.musicLink) musicLink=c.musicLink;
+  if(c.musicLink && /^https?:\/\//i.test(c.musicLink)) musicLink=c.musicLink;
   ['bgMode','soundOn','preWarn','adjustOn','propagate','gymEnabled'].forEach(k=>{
     if(typeof c[k]==='boolean'){
       if(k==='bgMode') bgMode=c[k]; if(k==='soundOn') soundOn=c[k];
