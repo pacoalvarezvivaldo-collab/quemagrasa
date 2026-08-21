@@ -71,7 +71,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 .hist-empty { font-size:12px; color:var(--muted); }
 
 /* ---- activo ---- */
-#active-screen.show { display:flex; flex-direction:column; height:calc(100vh - 58px); }
+#active-screen.show { display:flex; flex-direction:column; height:calc(100dvh - 58px); }
 #map { flex:1; min-height:0; background:var(--surface2); }
 .gps-status { position:absolute; top:70px; left:50%; transform:translateX(-50%); background:var(--surface);
   border:1px solid var(--border); border-radius:20px; padding:8px 18px; font-size:12.5px; color:var(--muted); z-index:1000; }
@@ -133,7 +133,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
       </button>
     </div>
 
-    <div class="privacy-note">📍 Vamos a pedirte acceso a tu ubicación para trazar la ruta en un mapa y calcular distancia/pasos. Todo se queda en tu teléfono — no se sube a ningún servidor.</div>
+    <div class="privacy-note">📍 Vamos a pedirte acceso a tu ubicación para trazar la ruta en un mapa y calcular distancia/pasos. Tu ruta se guarda solo en tu teléfono — nunca se sube a ningún servidor. Para dibujar el mapa se descargan imágenes de OpenStreetMap, que solo revelan la zona aproximada, nunca tu recorrido exacto.</div>
 
     <div class="field-row">
       <span class="field-label">Tu peso (para kcal)</span>
@@ -186,6 +186,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
       <div class="summary-stat"><div class="stat-val" id="sum-time">0:00</div><div class="stat-lbl">Tiempo</div></div>
       <div class="summary-stat"><div class="stat-val" id="sum-pace">--:--</div><div class="stat-lbl">Ritmo min/km</div></div>
       <div class="summary-stat"><div class="stat-val" id="sum-steps">0</div><div class="stat-lbl">Pasos (estimados)</div></div>
+      <div class="summary-stat" style="grid-column:span 2"><div class="stat-val" id="sum-kcal">0</div><div class="stat-lbl">Kcal (estimadas)</div></div>
     </div>
     <div class="summary-actions">
       <button class="sum-btn primary" onclick="shareRun()">📤 Compartir</button>
@@ -218,8 +219,9 @@ let tracking = false, paused = false;
 let watchId = null, tickTimerId = null;
 let points = [], distanceM = 0;
 let startTime = 0, totalPausedMs = 0, pauseStart = 0;
-let map = null, routeLine = null, userMarker = null;
+let map = null, routeLine = null, userMarker = null, summaryMap = null;
 let lastResult = null;
+let sessionSeq = 0;
 
 /* ---------- persistencia ---------- */
 function loadHistory(){ try{ return JSON.parse(localStorage.getItem(KEY_HISTORY))||[]; }catch(e){ return []; } }
@@ -231,7 +233,7 @@ function saveHistoryEntry(entry){
 }
 function saveWeight(v){
   const n = parseFloat(v);
-  if(!isNaN(n) && n>0){ userWeight = n; try{ localStorage.setItem(KEY_WEIGHT, String(n)); }catch(e){} }
+  if(!isNaN(n) && n>=30 && n<=250){ userWeight = n; try{ localStorage.setItem(KEY_WEIGHT, String(n)); }catch(e){} }
 }
 function loadWeight(){ try{ const v=parseFloat(localStorage.getItem(KEY_WEIGHT)); return v>0?v:70; }catch(e){ return 70; } }
 function saveModePref(){ try{ localStorage.setItem(KEY_MODE, mode); }catch(e){} }
@@ -261,6 +263,7 @@ document.body.addEventListener('click', initAudio, {once:true});
 /* ---------- pantalla encendida mientras se rastrea ---------- */
 let wakeLock = null;
 async function requestWakeLock(){
+  if(wakeLock) return;
   if('wakeLock' in navigator) try{ wakeLock = await navigator.wakeLock.request('screen'); }catch(e){}
 }
 async function releaseWakeLock(){
@@ -276,6 +279,8 @@ function showScreen(name){
   document.getElementById(name+'-screen').classList.add('show');
 }
 function backToSetup(){
+  sessionSeq++; // invalida cualquier getCurrentPosition pendiente de una sesión abandonada
+  tracking = false;
   stopWatchIfAny();
   clearInterval(tickTimerId);
   releaseWakeLock();
@@ -315,6 +320,7 @@ function kcalFor(elapsedS){ return Math.round(MET[mode]*3.5*userWeight/200/60 * 
 
 /* ---------- mapa ---------- */
 function initMap(center){
+  if(map){ try{ map.remove(); }catch(e){} map = null; routeLine = null; userMarker = null; }
   map = L.map('map', { zoomControl:false, attributionControl:true }).setView([center.lat, center.lng], 17);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -357,18 +363,20 @@ function startTracking(){
     return;
   }
   initAudio();
-  points = []; distanceM = 0; totalPausedMs = 0; paused = false;
+  points = []; distanceM = 0; totalPausedMs = 0; paused = false; startTime = 0; tracking = false;
+  document.getElementById('btn-run-pause').textContent = '⏸ Pausar';
+  const mySeq = ++sessionSeq;
   showScreen('active');
   document.getElementById('gps-status').style.display = '';
   navigator.geolocation.getCurrentPosition(
     pos => {
+      if(mySeq !== sessionSeq) return; // el usuario ya salió/detuvo antes de que llegara este fix
       const c = { lat:pos.coords.latitude, lng:pos.coords.longitude };
       initMap(c);
-      points = [c];
       setTimeout(()=>{ if(map) map.invalidateSize(); }, 50);
       beginSession();
     },
-    err => handleGeoError(err),
+    err => { if(mySeq === sessionSeq) handleGeoError(err); },
     { enableHighAccuracy:true, timeout:15000, maximumAge:0 }
   );
 }
@@ -412,6 +420,7 @@ function togglePauseRun(){
     paused = true;
     pauseStart = Date.now();
     stopWatchIfAny();
+    releaseWakeLock();
     btn.textContent = '▶ Reanudar';
   }
 }
@@ -430,6 +439,8 @@ function updateStats(){
 }
 
 function stopTracking(){
+  sessionSeq++; // invalida cualquier getCurrentPosition pendiente
+  if(!tracking){ backToSetup(); return; } // se detuvo antes de que llegara el primer fix — nada que resumir
   tracking = false;
   stopWatchIfAny();
   clearInterval(tickTimerId);
@@ -446,6 +457,7 @@ function stopTracking(){
   document.getElementById('sum-time').textContent = fmtTime(elapsedS);
   document.getElementById('sum-pace').textContent = fmtPace(elapsedS, distanceM);
   document.getElementById('sum-steps').textContent = steps;
+  document.getElementById('sum-kcal').textContent = kcal;
   document.getElementById('summary-title').textContent =
     (mode==='correr' ? '🏃 ¡Corrida completa!' : '🚶 ¡Caminata completa!');
 
@@ -455,16 +467,17 @@ function stopTracking(){
 
 function renderSummaryMap(){
   const el = document.getElementById('summary-map');
-  el.innerHTML = '';
+  if(summaryMap){ try{ summaryMap.remove(); }catch(e){} summaryMap = null; }
   if(points.length < 2){ el.style.display = 'none'; return; }
   el.style.display = '';
-  const sMap = L.map(el, { zoomControl:false, attributionControl:true, dragging:true, scrollWheelZoom:false });
+  summaryMap = L.map(el, { zoomControl:false, attributionControl:true, dragging:true, scrollWheelZoom:false });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; OpenStreetMap'
-  }).addTo(sMap);
+  }).addTo(summaryMap);
   const latlngs = points.map(p=>[p.lat,p.lng]);
-  const line = L.polyline(latlngs, { color:'#EF9F27', weight:5 }).addTo(sMap);
-  setTimeout(()=>{ sMap.invalidateSize(); sMap.fitBounds(line.getBounds(), { padding:[20,20] }); }, 60);
+  const line = L.polyline(latlngs, { color:'#EF9F27', weight:5 }).addTo(summaryMap);
+  const sMapRef = summaryMap;
+  setTimeout(()=>{ if(sMapRef===summaryMap){ sMapRef.invalidateSize(); sMapRef.fitBounds(line.getBounds(), { padding:[20,20] }); } }, 60);
 }
 
 /* ---------- compartir ---------- */
