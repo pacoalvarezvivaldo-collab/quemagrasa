@@ -496,6 +496,15 @@ const MACHINES = {
     frac:{ easy:[0.10,0.15], moderate:[0.28,0.35], intense:[0.50,0.60], recovery:[0.10,0.18] },
     ramp:{ easy:[0,0],       moderate:[0.04,0.04], intense:[0.06,0.05], recovery:[0,0] },
     pace:{ easy:"Suave", moderate:"Constante", intense:"Rápido", recovery:"Suave" }
+  },
+  casa: {
+    label:"Casa", icon:"🏠", bodyweight:true,
+    aeroName:"", sprintName:"",
+    p1lbl:"", u1:"", min1:0, max1:0, dec1:0, badge1:()=>'',
+    p2lbl:"", u2:"", min2:0, max2:0, dec2:0, badge2:()=>'',
+    frac:{ easy:[0,0], moderate:[0,0], intense:[0,0], recovery:[0,0] },
+    ramp:{ easy:[0,0], moderate:[0,0], intense:[0,0], recovery:[0,0] },
+    pace:{ easy:"", moderate:"", intense:"", recovery:"" }
   }
 };
 
@@ -577,6 +586,7 @@ function assignCasaExercises(intervals, levelKey){
 /* ---------- construcción del plan ---------- */
 function paramFor(type, cycle){
   const m=MACHINES[machineKey], L=LEVELS[levelKey];
+  if(m.bodyweight) return { p1:0, p2:0, pace:'' };
   const scale=(type==='easy'||type==='recovery') ? (1+(L.mult-1)*0.35) : L.mult;
   let f1=(m.frac[type][0] + m.ramp[type][0]*cycle)*scale;
   let f2=(m.frac[type][1] + m.ramp[type][1]*cycle)*scale;
@@ -611,6 +621,7 @@ function buildPlan(){
   if(lastInt>=0) INTERVALS[lastInt].name = "⚡ Sprint final";
   TOTAL_SECONDS=t;
   TOTAL_SPRINTS=INTERVALS.filter(i=>i.sprint).length;
+  if(MACHINES[machineKey].bodyweight) assignCasaExercises(INTERVALS, levelKey);
 }
 
 /* ---------- audio ---------- */
