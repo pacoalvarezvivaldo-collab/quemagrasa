@@ -39,7 +39,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 /* ---- nivel ---- */
 .level-intro { font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.5; }
 .level-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.level-card { background:var(--surface); border:1.5px solid var(--border); border-radius:16px;
+.level-card { width:100%; background:var(--surface); border:1.5px solid var(--border); border-radius:16px;
   padding:18px 10px; text-align:center; cursor:pointer; color:var(--text); font-family:'Syne',sans-serif;
   -webkit-tap-highlight-color:transparent; }
 .level-card .l-icon { font-size:26px; display:block; margin-bottom:6px; }
@@ -53,10 +53,13 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   padding:10px 2px; text-align:center; cursor:pointer; color:var(--text); font-family:'Space Mono',monospace;
   -webkit-tap-highlight-color:transparent; }
 .cal-day.done { background:var(--accent); border-color:var(--accent); color:var(--accent-text); }
+.cal-day.current:not(.done) { border-color:var(--accent); border-width:2px; }
 .cal-num { display:block; font-weight:700; font-size:15px; }
 .cal-icon { display:block; font-size:12px; margin-top:2px; }
 
 /* ---- jugador de ejercicio ---- */
+.player-back { background:none; border:none; color:var(--muted); font-family:'Syne',sans-serif;
+  font-size:12px; cursor:pointer; padding:0 0 14px; -webkit-tap-highlight-color:transparent; }
 .player-head { font-size:11px; color:var(--muted); text-align:center; margin-bottom:12px;
   letter-spacing:.05em; text-transform:uppercase; }
 .ex-gif { width:100%; max-width:280px; display:block; margin:0 auto; border-radius:16px; background:var(--surface2); }
@@ -105,20 +108,23 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 </div>
 
 <div class="screen" id="level-screen">
+  <div id="level-cancel-wrap" style="display:none;margin-bottom:14px;">
+    <button class="gear-btn" style="width:auto;padding:0 14px;" onclick="backToCalendar()">← Cancelar</button>
+  </div>
   <p class="level-intro">Elige tu nivel para empezar el plan. Define cuántos ejercicios haces por sesión — puedes cambiarlo después.</p>
   <div class="level-grid">
-    <div class="level-card" onclick="pickLevel('facil')">
-      <span class="l-icon">🌱</span><span class="l-name">Fácil</span><span class="l-sub">2–4 ejercicios</span>
-    </div>
-    <div class="level-card" onclick="pickLevel('medio')">
-      <span class="l-icon">🔥</span><span class="l-name">Medio</span><span class="l-sub">4–6 ejercicios</span>
-    </div>
-    <div class="level-card" onclick="pickLevel('dificil')">
-      <span class="l-icon">💥</span><span class="l-name">Difícil</span><span class="l-sub">6–8 ejercicios</span>
-    </div>
-    <div class="level-card" onclick="pickLevel('espartano')">
-      <span class="l-icon">⚔️</span><span class="l-name">Espartano</span><span class="l-sub">6–8, más intenso</span>
-    </div>
+    <button class="level-card" onclick="pickLevel('facil')">
+      <span class="l-icon">🌱</span><span class="l-name">Fácil</span><span class="l-sub">4 ejercicios</span>
+    </button>
+    <button class="level-card" onclick="pickLevel('medio')">
+      <span class="l-icon">🔥</span><span class="l-name">Medio</span><span class="l-sub">6 ejercicios</span>
+    </button>
+    <button class="level-card" onclick="pickLevel('dificil')">
+      <span class="l-icon">💥</span><span class="l-name">Difícil</span><span class="l-sub">8 ejercicios</span>
+    </button>
+    <button class="level-card" onclick="pickLevel('espartano')">
+      <span class="l-icon">⚔️</span><span class="l-name">Espartano</span><span class="l-sub">8, más intenso</span>
+    </button>
   </div>
 </div>
 
@@ -131,6 +137,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 </div>
 
 <div class="screen" id="player-screen">
+  <button class="player-back" onclick="backToCalendar()">← Calendario</button>
   <div class="player-head" id="player-head"></div>
   <img class="ex-gif" id="ex-img" alt="">
   <div class="ex-name" id="ex-name"></div>
@@ -167,10 +174,6 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   <div class="egg-text" id="egg-text"></div>
 </div>
 
-<audio id="silent-audio" loop>
-  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" type="audio/wav">
-</audio>
-
 <script>
 /* =====================================================================
    ENTRENAMIENTOS — plan de 30 días, peso corporal, sin equipo
@@ -197,13 +200,15 @@ const MUSCLE_CYCLE = [
   { key:'chest', label:'Pecho',   icon:'🫁', bodyParts:['chest'] }
 ];
 
-const KEY_LEVEL='ent_level', KEY_DONE='ent_completed';
+const KEY_LEVEL='ent_level', KEY_DONE='ent_completed', KEY_CURRENT='ent_current';
 
 let LEVEL_KEY = null;
 let COMPLETED = new Set();
+let CURRENT_DAY_SAVED = null;
 let POOL = { status:'idle', byGroup:{} };
+let poolPromise = null;
 let currentDay = null, currentSession = [], currentIdx = 0;
-let paused = false, restLeft = 0, restTimerId = null;
+let paused = false, pausedAt = 0, restLeft = 0, restEndAt = 0, restWarned = false, restTimerId = null;
 
 /* ---------- persistencia ---------- */
 function saveLevel(){ try{ localStorage.setItem(KEY_LEVEL, LEVEL_KEY); }catch(e){} }
@@ -212,6 +217,11 @@ function saveCompleted(){ try{ localStorage.setItem(KEY_DONE, JSON.stringify([..
 function loadCompleted(){
   try{ const v=localStorage.getItem(KEY_DONE); return v ? new Set(JSON.parse(v)) : new Set(); }
   catch(e){ return new Set(); }
+}
+function saveCurrentDay(day){ try{ localStorage.setItem(KEY_CURRENT, String(day)); }catch(e){} }
+function loadCurrentDay(){
+  try{ const v=localStorage.getItem(KEY_CURRENT); return v ? parseInt(v,10) : null; }
+  catch(e){ return null; }
 }
 
 /* ---------- audio/vibración (mismo patrón que index.html) ---------- */
@@ -238,25 +248,30 @@ document.body.addEventListener('click', initAudio, {once:true});
 /* ---------- datos ---------- */
 async function ensurePool(){
   if(POOL.status==='ready') return true;
-  if(POOL.status==='loading') return false;
+  if(poolPromise) return poolPromise;
   POOL = { status:'loading', byGroup:{} };
-  try{
-    const res = await fetch(EX_URL);
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const data = await res.json();
-    const byGroup = {};
-    MUSCLE_CYCLE.forEach(g=>{ byGroup[g.key]=[]; });
-    data.exercises.forEach(e=>{
-      const g = MUSCLE_CYCLE.find(g=>g.bodyParts.includes(e.bodyPart));
-      if(g) byGroup[g.key].push(e);
-    });
-    MUSCLE_CYCLE.forEach(g=>{ byGroup[g.key].sort((a,b)=>a.slug.localeCompare(b.slug)); });
-    POOL = { status:'ready', byGroup };
-    return true;
-  }catch(e){
-    POOL = { status:'error', byGroup:{} };
-    return false;
-  }
+  poolPromise = (async()=>{
+    try{
+      const res = await fetch(EX_URL);
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data = await res.json();
+      const byGroup = {};
+      MUSCLE_CYCLE.forEach(g=>{ byGroup[g.key]=[]; });
+      data.exercises.forEach(e=>{
+        const g = MUSCLE_CYCLE.find(g=>g.bodyParts.includes(e.bodyPart));
+        if(g) byGroup[g.key].push(e);
+      });
+      MUSCLE_CYCLE.forEach(g=>{ byGroup[g.key].sort((a,b)=>a.slug.localeCompare(b.slug)); });
+      POOL = { status:'ready', byGroup };
+      return true;
+    }catch(e){
+      POOL = { status:'error', byGroup:{} };
+      return false;
+    }finally{
+      poolPromise = null;
+    }
+  })();
+  return poolPromise;
 }
 
 function groupForDay(day){ return MUSCLE_CYCLE[(day-1)%5]; }
@@ -286,7 +301,11 @@ function showScreen(name){
   document.getElementById(name+'-screen').classList.add('show');
 }
 
-function openLevelPicker(){ showScreen('level'); }
+function openLevelPicker(){
+  stopRestTimer();
+  document.getElementById('level-cancel-wrap').style.display = LEVEL_KEY ? '' : 'none';
+  showScreen('level');
+}
 
 function pickLevel(k){
   LEVEL_KEY = k; saveLevel();
@@ -300,8 +319,11 @@ function renderCalendar(){
   grid.innerHTML = '';
   for(let d=1; d<=30; d++){
     const g = groupForDay(d);
+    let cls = 'cal-day';
+    if(COMPLETED.has(d)) cls += ' done';
+    if(d===CURRENT_DAY_SAVED) cls += ' current';
     const btn = document.createElement('button');
-    btn.className = 'cal-day'+(COMPLETED.has(d)?' done':'');
+    btn.className = cls;
     btn.innerHTML = `<span class="cal-num">${d}</span><span class="cal-icon">${g.icon}</span>`;
     btn.onclick = ()=>openDayFlow(d);
     grid.appendChild(btn);
@@ -310,7 +332,11 @@ function renderCalendar(){
   document.getElementById('cal-level').textContent = `${LEVELS[LEVEL_KEY].icon} ${LEVELS[LEVEL_KEY].label}`;
 }
 
-function backToCalendar(){ renderCalendar(); showScreen('calendar'); }
+function backToCalendar(){
+  stopRestTimer();
+  renderCalendar();
+  showScreen('calendar');
+}
 
 /* ---------- abrir un día ---------- */
 async function openDayFlow(d){
@@ -333,9 +359,12 @@ async function openDayFlow(d){
 }
 
 function openDay(day){
+  stopRestTimer();
   currentDay = day;
   currentSession = exercisesForDay(day);
   currentIdx = 0;
+  CURRENT_DAY_SAVED = day;
+  saveCurrentDay(day);
   document.getElementById('upcoming-wrap').style.display = '';
   document.getElementById('player-controls').style.display = 'flex';
   showScreen('player');
@@ -370,6 +399,7 @@ function renderExercise(){
   const ex = currentSession[currentIdx];
   const img = document.getElementById('ex-img');
   if(ex){
+    img.removeAttribute('src');
     img.src = ex.gifUrl; img.alt = ex.name; img.style.display = '';
     document.getElementById('ex-name').textContent = ex.name;
     document.getElementById('ex-reps').textContent = `x ${repsForDay(currentDay)}`;
@@ -403,6 +433,8 @@ function prevExercise(){
 
 function togglePause(){
   paused = !paused;
+  if(paused){ pausedAt = Date.now(); }
+  else if(pausedAt){ restEndAt += (Date.now()-pausedAt); pausedAt = 0; }
   syncPauseUI();
 }
 
@@ -410,14 +442,14 @@ function syncPauseUI(){
   const label = paused ? '▶' : '⏸';
   const btnEx = document.getElementById('btn-pause'); if(btnEx) btnEx.textContent = label;
   const btnRest = document.getElementById('rest-pause-btn'); if(btnRest) btnRest.textContent = label;
-  document.getElementById('btn-done').disabled = paused;
+  document.getElementById('btn-done').disabled = paused || !currentSession.length;
   document.getElementById('btn-prev').disabled = paused || currentIdx===0;
 }
 
 /* ---------- marcar hecho / descanso ---------- */
 function markDone(){
   initAudio();
-  if(paused) return;
+  if(paused || !currentSession.length) return;
   if(currentIdx >= currentSession.length-1){
     completeSession();
     return;
@@ -425,23 +457,33 @@ function markDone(){
   startRest();
 }
 
-function startRest(){
+function stopRestTimer(){
+  clearInterval(restTimerId);
+  restTimerId = null;
   paused = false;
-  restLeft = 30;
+  pausedAt = 0;
+}
+
+function startRest(){
+  stopRestTimer();
+  restEndAt = Date.now() + 30000;
+  restWarned = false;
   document.getElementById('player-controls').style.display = 'none';
   const box = document.getElementById('rest-box');
   box.classList.add('show');
+  restLeft = 30;
   updateRestUI();
-  clearInterval(restTimerId);
-  restTimerId = setInterval(tickRest, 1000);
+  restTimerId = setInterval(tickRest, 250);
 }
 
 function tickRest(){
   if(paused) return;
-  restLeft--;
-  if(restLeft===10){ vibrate([90,70,90]); beep(1320,0.1,0.28); }
+  restLeft = Math.max(0, Math.ceil((restEndAt-Date.now())/1000));
+  if(!restWarned && restLeft<=10 && restLeft>0){
+    restWarned = true; vibrate([90,70,90]); beep(1320,0.1,0.28);
+  }
   if(restLeft<=0){
-    clearInterval(restTimerId);
+    stopRestTimer();
     currentIdx++;
     renderExercise();
     return;
@@ -467,6 +509,7 @@ function completeSession(){
 (function init(){
   LEVEL_KEY = loadLevel();
   COMPLETED = loadCompleted();
+  CURRENT_DAY_SAVED = loadCurrentDay();
   if(LEVEL_KEY && LEVELS[LEVEL_KEY]){
     renderCalendar();
     showScreen('calendar');
