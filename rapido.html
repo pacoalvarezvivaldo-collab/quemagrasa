@@ -121,6 +121,11 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 const EX_URL = 'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/bodyweight.json';
 const COUNT = 8, WORK_SECONDS = 45, REST_SECONDS = 30;
 
+/* Filtra ejercicios que piden equipo poco común en casa (pelotas/fitball/bosu, barras/barras
+   paralelas). Los de banco se dejan pero se marcan para sugerir una silla en su lugar. */
+const NO_EQUIPMENT_RE = /ball|balon|balón|pelota|medicine|swiss|estabilidad|barbell|ez-bar|\bbars?\b|barra/i;
+const CHAIR_TIP_RE = /bench|banco/i;
+
 let poolStatus = 'idle', poolPromise = null, ALL_EXERCISES = [];
 let session = [], idx = 0, phase = 'work';
 let phaseEndAt = 0, phaseWarned = false, timerId = null;
@@ -137,7 +142,13 @@ async function ensurePool(){
       if(!res.ok) throw new Error('HTTP '+res.status);
       const data = await res.json();
       if(!Array.isArray(data.exercises) || !data.exercises.length) throw new Error('pool vacío');
-      ALL_EXERCISES = data.exercises;
+      ALL_EXERCISES = data.exercises.filter(e=>{
+        const text = e.slug+' '+e.name;
+        if(NO_EQUIPMENT_RE.test(text)) return false;
+        e.chairTip = CHAIR_TIP_RE.test(text);
+        return true;
+      });
+      if(!ALL_EXERCISES.length) throw new Error('pool vacío tras filtrar');
       poolStatus = 'ready';
       return true;
     }catch(e){
@@ -303,7 +314,9 @@ function render(){
     img.removeAttribute('src');
     img.src = ex.gifUrl; img.alt = ex.name; img.style.visibility = '';
     document.getElementById('play-name').textContent = ex.name;
-    document.getElementById('play-hint').textContent = 'Haz las repeticiones que puedas';
+    document.getElementById('play-hint').textContent = ex.chairTip
+      ? 'Haz las repeticiones que puedas · 💡 ¿No tienes banco? Usa una silla.'
+      : 'Haz las repeticiones que puedas';
     document.getElementById('play-next').textContent = '';
   } else {
     img.style.visibility = 'hidden';

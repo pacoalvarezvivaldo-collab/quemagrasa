@@ -65,6 +65,9 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 .ex-gif { width:100%; max-width:280px; display:block; margin:0 auto; border-radius:16px; background:var(--surface2); }
 .ex-name { text-align:center; font-size:20px; font-weight:800; margin-top:14px; }
 .ex-reps { text-align:center; font-family:'Space Mono',monospace; font-size:34px; font-weight:700; color:var(--accent); margin-top:6px; }
+.ex-tip { display:none; text-align:center; font-size:11.5px; color:var(--muted); background:var(--surface);
+  border:1px solid var(--border); border-radius:10px; padding:7px 12px; margin:10px auto 0; max-width:280px; }
+.ex-tip.show { display:block; }
 .player-controls { display:flex; gap:8px; margin-top:18px; }
 .p-btn { border:none; border-radius:14px; padding:14px; font-family:'Syne',sans-serif;
   font-size:13px; font-weight:700; cursor:pointer; -webkit-tap-highlight-color:transparent; }
@@ -142,6 +145,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   <img class="ex-gif" id="ex-img" alt="">
   <div class="ex-name" id="ex-name"></div>
   <div class="ex-reps" id="ex-reps"></div>
+  <div class="ex-tip" id="ex-tip"></div>
 
   <div class="player-controls" id="player-controls">
     <button class="p-btn p-btn-prev" id="btn-prev" onclick="prevExercise()">⏮</button>
@@ -246,6 +250,12 @@ document.body.addEventListener('touchstart', initAudio, {once:true});
 document.body.addEventListener('click', initAudio, {once:true});
 
 /* ---------- datos ---------- */
+/* Filtra ejercicios que piden equipo poco común en casa (pelotas/fitball/bosu, barras/barras
+   paralelas) — no toda la gente lo tiene. Los de banco se dejan pero se marcan para sugerir
+   una silla en su lugar. Basado en los slugs/nombres reales del catálogo, no en suposiciones. */
+const NO_EQUIPMENT_RE = /ball|balon|balón|pelota|medicine|swiss|estabilidad|barbell|ez-bar|\bbars?\b|barra/i;
+const CHAIR_TIP_RE = /bench|banco/i;
+
 async function ensurePool(){
   if(POOL.status==='ready') return true;
   if(poolPromise) return poolPromise;
@@ -258,6 +268,9 @@ async function ensurePool(){
       const byGroup = {};
       MUSCLE_CYCLE.forEach(g=>{ byGroup[g.key]=[]; });
       data.exercises.forEach(e=>{
+        const text = e.slug+' '+e.name;
+        if(NO_EQUIPMENT_RE.test(text)) return;
+        e.chairTip = CHAIR_TIP_RE.test(text);
         const g = MUSCLE_CYCLE.find(g=>g.bodyParts.includes(e.bodyPart));
         if(g) byGroup[g.key].push(e);
       });
@@ -402,15 +415,19 @@ function renderExercise(){
 
   const ex = currentSession[currentIdx];
   const img = document.getElementById('ex-img');
+  const tip = document.getElementById('ex-tip');
   if(ex){
     img.removeAttribute('src');
     img.src = ex.gifUrl; img.alt = ex.name; img.style.display = '';
     document.getElementById('ex-name').textContent = ex.name;
     document.getElementById('ex-reps').textContent = `x ${repsForDay(currentDay)}`;
+    if(ex.chairTip){ tip.textContent = '💡 ¿No tienes banco? Usa una silla.'; tip.classList.add('show'); }
+    else tip.classList.remove('show');
   } else {
     img.removeAttribute('src'); img.style.display = 'none';
     document.getElementById('ex-name').textContent = 'Sin ejercicios disponibles.';
     document.getElementById('ex-reps').textContent = '';
+    tip.classList.remove('show');
   }
   syncPauseUI();
   renderUpcoming();
