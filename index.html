@@ -62,6 +62,11 @@ body { color:var(--text); font-family:'Syne',sans-serif; display:flex; flex-dire
 .param-val { font-family:'Space Mono',monospace; font-size:19px; font-weight:700; }
 .param-unit { font-family:'Space Mono',monospace; font-size:11px; font-weight:400; opacity:.6; }
 .param-lbl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-top:2px; }
+.exercise-box { display:none; flex-direction:column; align-items:center; gap:6px; }
+.exercise-gif { width:100%; max-width:220px; border-radius:16px; display:block; background:var(--surface2); }
+.exercise-status { font-size:12px; color:var(--muted); text-align:center; padding:6px 0; }
+.gym-exercise { display:none; flex-direction:column; align-items:center; gap:8px; width:100%; margin-top:16px; }
+.gym-exercise-gif { width:100%; max-width:340px; border-radius:20px; display:block; background:var(--surface2); }
 
 /* ---- ajuste rápido en vivo ---- */
 .adjust-row { display:flex; gap:8px; padding:0 20px 8px; }
@@ -266,6 +271,10 @@ input, textarea { -webkit-user-select:text; user-select:text; }
       <div class="param-box"><div class="param-val" id="param-p2">2</div><div class="param-lbl" id="param-p2-lbl">Resistencia</div></div>
       <div class="param-box"><div class="param-val" id="param-pace" style="font-size:13px;padding-top:4px">Lento</div><div class="param-lbl">Ritmo</div></div>
     </div>
+    <div class="exercise-box" id="current-exercise">
+      <img class="exercise-gif" id="current-exercise-img" alt="">
+      <div class="exercise-status" id="current-exercise-status"></div>
+    </div>
   </div>
 
   <div class="adjust-row" id="adjust-row">
@@ -316,6 +325,10 @@ input, textarea { -webkit-user-select:text; user-select:text; }
     <div class="gym-params">
       <div class="gym-p"><div class="gym-p-val" id="gym-p1">5</div><div class="gym-p-lbl" id="gym-p1-lbl">Inclinación</div></div>
       <div class="gym-p"><div class="gym-p-val" id="gym-p2">2</div><div class="gym-p-lbl" id="gym-p2-lbl">Resistencia</div></div>
+    </div>
+    <div class="gym-exercise" id="gym-exercise">
+      <img class="gym-exercise-gif" id="gym-exercise-img" alt="">
+      <div class="exercise-status" id="gym-exercise-status"></div>
     </div>
     <div class="gym-next" id="gym-next">Sigue: Zona aeróbica</div>
     <div class="gym-bar"><div class="gym-bar-fill" id="gym-bar-fill"></div></div>
