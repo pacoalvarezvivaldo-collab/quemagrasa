@@ -532,6 +532,48 @@ function fmt2(s){ s=Math.max(0,Math.floor(s)); return `${Math.floor(s/60).toStri
 function vibrate(p){ if(navigator.vibrate) try{navigator.vibrate(p);}catch(e){} }
 function kcalPerSec(type){ return (TYPE_MET[type]*LEVELS[levelKey].met*3.5*userWeight/200)/60; }
 
+/* ---------- modo Casa: datos de ejercicios ---------- */
+const CASA_URL = 'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/bodyweight.json';
+const CASA_CATEGORY_BY_TYPE = { easy:'stretching', moderate:'cardio', recovery:'stretching' };
+let CASA_STATE = { status:'idle', byCategory:{}, error:null };
+
+async function ensureCasaExercises(){
+  if(CASA_STATE.status==='ready') return true;
+  if(CASA_STATE.status==='loading') return false;
+  CASA_STATE = { status:'loading', byCategory:{}, error:null };
+  try{
+    const res = await fetch(CASA_URL);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    const byCategory = {};
+    data.exercises.forEach(e=>{ (byCategory[e.category] = byCategory[e.category]||[]).push(e); });
+    CASA_STATE = { status:'ready', byCategory, error:null };
+    return true;
+  }catch(e){
+    CASA_STATE = { status:'error', byCategory:{}, error:(e&&e.message)||'error' };
+    return false;
+  }
+}
+
+function casaCategoryFor(type, levelKey){
+  if(type==='intense') return (levelKey==='dificil'||levelKey==='espartano') ? 'plyometrics' : 'cardio';
+  return CASA_CATEGORY_BY_TYPE[type] || 'strength';
+}
+
+function assignCasaExercises(intervals, levelKey){
+  if(CASA_STATE.status!=='ready'){ intervals.forEach(iv=>{ iv.exercise=null; }); return; }
+  const nextIdx={};
+  intervals.forEach(iv=>{
+    const cat=casaCategoryFor(iv.type, levelKey);
+    const pool=CASA_STATE.byCategory[cat]||[];
+    if(!pool.length){ iv.exercise=null; return; }
+    if(nextIdx[cat]===undefined) nextIdx[cat]=Math.floor(Math.random()*pool.length);
+    iv.exercise=pool[nextIdx[cat]%pool.length];
+    nextIdx[cat]++;
+    iv.name=iv.exercise.name;
+  });
+}
+
 /* ---------- construcción del plan ---------- */
 function paramFor(type, cycle){
   const m=MACHINES[machineKey], L=LEVELS[levelKey];
