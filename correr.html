@@ -133,7 +133,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
       </button>
     </div>
 
-    <div class="privacy-note">📍 Vamos a pedirte acceso a tu ubicación para trazar la ruta en un mapa y calcular distancia/pasos. Tu ruta se guarda solo en tu teléfono — nunca se sube a ningún servidor. Para dibujar el mapa se descargan imágenes de OpenStreetMap, que solo revelan la zona aproximada, nunca tu recorrido exacto.</div>
+    <div class="privacy-note">📍 Vamos a pedirte acceso a tu ubicación para trazar la ruta en un mapa y calcular distancia/pasos. Tu ruta se guarda solo en tu teléfono — nunca se sube a ningún servidor. Para dibujar el mapa se descargan imágenes de OpenStreetMap, que revelan la zona por la que vas pasando (cuadros de ~300 m), sin coordenadas exactas.</div>
 
     <div class="field-row">
       <span class="field-label">Tu peso (para kcal)</span>
@@ -202,8 +202,10 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <script>
 /* =====================================================================
    CORRER / CAMINAR — rastreo GPS, mapa Leaflet+OSM, pasos estimados
-   por distancia, kcal por MET, compartir nativo. Todo local — la
-   ubicación nunca sale del teléfono (sin fetch, sin servidor propio).
+   por distancia, kcal por MET, compartir nativo. Sin fetch, sin
+   servidor propio: las coordenadas nunca se envían a ningún backend
+   nuestro — solo se usan localmente y como {z}/{x}/{y} de tiles OSM
+   (revela zona aproximada mientras te mueves, no coordenadas exactas).
    ===================================================================== */
 
 const STRIDE_M = { correr:1.15, caminar:0.75 };
@@ -235,7 +237,7 @@ function saveWeight(v){
   const n = parseFloat(v);
   if(!isNaN(n) && n>=30 && n<=250){ userWeight = n; try{ localStorage.setItem(KEY_WEIGHT, String(n)); }catch(e){} }
 }
-function loadWeight(){ try{ const v=parseFloat(localStorage.getItem(KEY_WEIGHT)); return v>0?v:70; }catch(e){ return 70; } }
+function loadWeight(){ try{ const v=parseFloat(localStorage.getItem(KEY_WEIGHT)); return (v>=30 && v<=250)?v:70; }catch(e){ return 70; } }
 function saveModePref(){ try{ localStorage.setItem(KEY_MODE, mode); }catch(e){} }
 function loadModePref(){ try{ return localStorage.getItem(KEY_MODE); }catch(e){ return null; } }
 
@@ -325,7 +327,7 @@ function initMap(center){
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(map);
-  routeLine = L.polyline([[center.lat,center.lng]], { color:'#EF9F27', weight:5 }).addTo(map);
+  routeLine = L.polyline([], { color:'#EF9F27', weight:5 }).addTo(map);
   userMarker = L.circleMarker([center.lat,center.lng], { radius:8, color:'#EF9F27', fillColor:'#EF9F27', fillOpacity:1, weight:2 }).addTo(map);
 }
 function panMapTo(point){
@@ -336,6 +338,7 @@ function panMapTo(point){
 
 /* ---------- rastreo GPS ---------- */
 function onPosition(pos){
+  if(!tracking || paused) return; // defensa extra: nunca registrar fixes fuera de una sesión activa
   const { latitude:lat, longitude:lng, accuracy } = pos.coords;
   if(accuracy && accuracy > MIN_ACCURACY_M) return;
   const point = { lat, lng };
@@ -386,6 +389,7 @@ function beginSession(){
   startTime = Date.now();
   document.getElementById('gps-status').style.display = 'none';
   requestWakeLock();
+  stopWatchIfAny(); // por construcción no debería haber uno vivo aquí; defensivo antes de asignar watchId
   watchId = navigator.geolocation.watchPosition(onPosition, onPositionErrorSilent,
     { enableHighAccuracy:true, maximumAge:1000, timeout:20000 });
   tickTimerId = setInterval(updateStats, 1000);
