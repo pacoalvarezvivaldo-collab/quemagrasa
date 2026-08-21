@@ -994,7 +994,13 @@ function refreshHeader(){
 function rebuildAll(){ buildPlan(); rebuildTimeline(); refreshHeader(); resetTimer(); }
 function selectLevel(k){ levelKey=k; durKey=LEVELS[k].defDur; syncButtons(); rebuildAll(); }
 function selectDuration(d){ durKey=d; syncButtons(); rebuildAll(); }
-function selectMachine(k){ machineKey=k; syncButtons(); rebuildAll(); }
+async function selectMachine(k){
+  machineKey=k; syncButtons(); rebuildAll();
+  if(MACHINES[k].bodyweight){
+    await ensureCasaExercises();
+    if(machineKey===k) rebuildAll();
+  }
+}
 function syncButtons(){
   document.querySelectorAll('#level-grid .opt-btn').forEach(b=>b.classList.toggle('active', b.dataset.key===levelKey));
   document.querySelectorAll('#duration-grid .opt-btn').forEach(b=>b.classList.toggle('active', +b.dataset.key===durKey));
@@ -1132,6 +1138,10 @@ async function loadSettings(){
   document.getElementById('music-btn').href=musicLink;
   syncToggleUI(); syncButtons(); applyTheme(themeKey);
   buildPlan(); rebuildTimeline(); refreshHeader(); resetTimer();
+  if(MACHINES[machineKey].bodyweight){
+    await ensureCasaExercises();
+    buildPlan(); rebuildTimeline(); refreshHeader(); resetTimer();
+  }
 }
 
 /* ---------- historial y racha ---------- */
