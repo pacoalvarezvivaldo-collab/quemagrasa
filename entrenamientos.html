@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Entrenamientos">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d0d0f">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.jsdelivr.net; media-src 'self' data:; connect-src https://cdn.jsdelivr.net; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.jsdelivr.net; connect-src https://cdn.jsdelivr.net; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
 <title>Entrenamientos · Plan 30 días</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
@@ -296,7 +296,9 @@ function repsForDay(day){
 }
 
 /* ---------- pantallas ---------- */
+let navEpoch = 0;
 function showScreen(name){
+  navEpoch++;
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));
   document.getElementById(name+'-screen').classList.add('show');
 }
@@ -342,6 +344,7 @@ function backToCalendar(){
 async function openDayFlow(d){
   if(POOL.status!=='ready'){
     showScreen('player');
+    const myEpoch = navEpoch;
     document.getElementById('player-head').textContent = 'Cargando ejercicios…';
     document.getElementById('ex-img').style.display = 'none';
     document.getElementById('ex-name').textContent = '';
@@ -350,6 +353,7 @@ async function openDayFlow(d){
     document.getElementById('rest-box').classList.remove('show');
     document.getElementById('upcoming-wrap').style.display = 'none';
     const ok = await ensurePool();
+    if(myEpoch !== navEpoch) return; // el usuario ya navegó a otra pantalla mientras esperábamos
     if(!ok){
       document.getElementById('player-head').textContent = 'No se pudo cargar (revisa tu internet).';
       return;
@@ -514,6 +518,7 @@ function completeSession(){
     renderCalendar();
     showScreen('calendar');
   } else {
+    LEVEL_KEY = null;
     showScreen('level');
   }
   ensurePool();
