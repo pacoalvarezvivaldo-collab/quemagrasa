@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Quemagrasa">
+<meta name="apple-mobile-web-app-title" content="Cardio">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d0d0f">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
-<title>Quemagrasa · v3</title>
+<title>Cardio HIIT · Quemagrasa</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1124,11 +1124,14 @@ buildPlan(); rebuildTimeline(); refreshHeader(); applyTheme(themeKey); updateUI(
 (async()=>{
   await loadSettings();
   const urlMachine = new URLSearchParams(location.search).get('m');
-  if(urlMachine && MACHINES[urlMachine] && urlMachine!==machineKey){
-    machineKey = urlMachine;
-    syncButtons();
-    rebuildAll();
-    saveSettings();
+  if(urlMachine && MACHINES[urlMachine]){
+    if(urlMachine!==machineKey){
+      machineKey = urlMachine;
+      syncButtons();
+      rebuildAll();
+      saveSettings();
+    }
+    history.replaceState(null, '', location.pathname);
   }
   sessions=(await Store.get(KEY_HIST))||[];
   renderHistory();

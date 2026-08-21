@@ -52,7 +52,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 .play-timer { font-family:'Space Mono',monospace; font-size:64px; font-weight:700; line-height:1; }
 .play-timer.work { color:var(--accent); }
 .play-timer.rest { color:var(--rest); }
-.play-gif { width:100%; max-width:260px; display:block; margin:18px auto 0; border-radius:16px; background:var(--surface2); }
+.play-gif { width:100%; max-width:260px; aspect-ratio:1/1; object-fit:contain; display:block; margin:18px auto 0; border-radius:16px; background:var(--surface2); }
 .play-name { font-size:19px; font-weight:800; margin-top:14px; }
 .play-hint { font-size:11px; color:var(--muted); margin-top:4px; }
 .play-next { font-size:13px; color:var(--muted); margin-top:16px; }
@@ -104,7 +104,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <div class="screen" id="complete-screen">
   <div class="complete-icon">🔥</div>
   <div class="complete-title">¡10 minutos completos!</div>
-  <div class="complete-sub">8 ejercicios hechos. Buen trabajo.</div>
+  <div class="complete-sub" id="complete-sub">8 ejercicios hechos. Buen trabajo.</div>
   <div class="complete-actions">
     <button class="complete-btn" onclick="startSession()">Otra ronda</button>
     <button class="complete-btn secondary" onclick="goHome()">Volver al inicio</button>
@@ -136,6 +136,7 @@ async function ensurePool(){
       const res = await fetch(EX_URL);
       if(!res.ok) throw new Error('HTTP '+res.status);
       const data = await res.json();
+      if(!Array.isArray(data.exercises) || !data.exercises.length) throw new Error('pool vacío');
       ALL_EXERCISES = data.exercises;
       poolStatus = 'ready';
       return true;
@@ -184,7 +185,7 @@ function showScreen(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));
   document.getElementById(name+'-screen').classList.add('show');
 }
-function goHome(){ stopTimer(); location.href = 'index.html'; }
+function goHome(){ stopTimer(); releaseWakeLock(); location.href = 'index.html'; }
 
 /* ---------- sesión ---------- */
 async function startSession(){
@@ -198,11 +199,13 @@ async function startSession(){
       document.getElementById('intro-note').textContent = 'No se pudo cargar (revisa tu internet).';
       return;
     }
+    document.getElementById('intro-note').textContent = '';
   }
   session = shuffle(ALL_EXERCISES).slice(0, COUNT);
   idx = 0;
   phase = 'work';
   showScreen('play');
+  requestWakeLock();
   startPhase();
 }
 
@@ -211,7 +214,21 @@ function stopTimer(){
   timerId = null;
   paused = false;
   pausedAt = 0;
+  const btn = document.getElementById('btn-pause');
+  if(btn) btn.textContent = '⏸ Pausar';
 }
+
+/* ---------- pantalla encendida mientras corre la sesión ---------- */
+let wakeLock = null;
+async function requestWakeLock(){
+  if('wakeLock' in navigator) try{ wakeLock = await navigator.wakeLock.request('screen'); }catch(e){}
+}
+async function releaseWakeLock(){
+  if(wakeLock){ try{ await wakeLock.release(); }catch(e){} wakeLock = null; }
+}
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible' && timerId) requestWakeLock();
+});
 
 function startPhase(){
   stopTimer();
@@ -258,12 +275,22 @@ function togglePause(){
 
 function finishSession(){
   stopTimer();
+  releaseWakeLock();
+  vibrate([300,100,300,100,600]);
+  beep(523,0.15,0.3); setTimeout(()=>beep(659,0.15,0.3),160); setTimeout(()=>beep(784,0.35,0.3),330);
+  document.getElementById('complete-sub').textContent = `${session.length} ejercicios hechos. Buen trabajo.`;
   showScreen('complete');
 }
 
 /* ---------- render ---------- */
 function render(){
   const ex = session[idx];
+  if(!ex){
+    document.getElementById('play-name').textContent = 'Sin ejercicios disponibles.';
+    document.getElementById('play-hint').textContent = '';
+    document.getElementById('play-gif').style.display = 'none';
+    return;
+  }
   const label = document.getElementById('phase-label');
   const timer = document.getElementById('play-timer');
   label.textContent = phase==='work' ? 'Trabajo' : 'Descanso';
@@ -274,16 +301,16 @@ function render(){
   const img = document.getElementById('play-gif');
   if(phase==='work'){
     img.removeAttribute('src');
-    img.src = ex.gifUrl; img.alt = ex.name; img.style.display = '';
+    img.src = ex.gifUrl; img.alt = ex.name; img.style.visibility = '';
     document.getElementById('play-name').textContent = ex.name;
     document.getElementById('play-hint').textContent = 'Haz las repeticiones que puedas';
     document.getElementById('play-next').textContent = '';
   } else {
-    img.style.display = 'none';
+    img.style.visibility = 'hidden';
     document.getElementById('play-name').textContent = 'Descanso';
     document.getElementById('play-hint').textContent = '';
     const next = session[idx+1];
-    document.getElementById('play-next').textContent = next ? `Siguiente: ${next.name}` : '';
+    document.getElementById('play-next').textContent = next ? `Siguiente: ${next.name}` : 'Último — ya casi terminas';
   }
   updateTimer(phase==='work' ? WORK_SECONDS : REST_SECONDS);
 }
