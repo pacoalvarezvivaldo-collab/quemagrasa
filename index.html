@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Quemagrasa">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d0d0f">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.jsdelivr.net; media-src 'self' data:; connect-src https://cdn.jsdelivr.net; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
 <title>Quemagrasa · v3</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
@@ -62,11 +62,6 @@ body { color:var(--text); font-family:'Syne',sans-serif; display:flex; flex-dire
 .param-val { font-family:'Space Mono',monospace; font-size:19px; font-weight:700; }
 .param-unit { font-family:'Space Mono',monospace; font-size:11px; font-weight:400; opacity:.6; }
 .param-lbl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-top:2px; }
-.exercise-box { display:none; flex-direction:column; align-items:center; gap:6px; }
-.exercise-gif { width:100%; max-width:220px; border-radius:16px; display:block; background:var(--surface2); }
-.exercise-status { font-size:12px; color:var(--muted); text-align:center; padding:6px 0; }
-.gym-exercise { display:none; flex-direction:column; align-items:center; gap:8px; width:100%; margin-top:16px; }
-.gym-exercise-gif { width:100%; max-width:340px; border-radius:20px; display:block; background:var(--surface2); }
 
 /* ---- ajuste rápido en vivo ---- */
 .adjust-row { display:flex; gap:8px; padding:0 20px 8px; }
@@ -234,6 +229,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
   <span class="topbar-title" id="topbar-title">🌀 Elíptica · Medio · 30′</span>
   <div class="topbar-right">
     <span class="topbar-total" id="total-elapsed">00:00 / 30:00</span>
+    <a class="gear-btn" href="entrenamientos.html" title="Entrenamientos en casa" style="display:flex;align-items:center;justify-content:center;text-decoration:none;">🏠</a>
     <button class="gear-btn" id="gym-btn" onclick="openGym()">⛶</button>
     <button class="gear-btn" onclick="openSettings()">⚙</button>
   </div>
@@ -266,14 +262,10 @@ input, textarea { -webkit-user-select:text; user-select:text; }
       <div class="current-name" id="current-name">Calentamiento</div>
       <div class="current-time" id="current-time-range">0:00–3:00</div>
     </div>
-    <div class="current-params" id="current-params">
+    <div class="current-params">
       <div class="param-box"><div class="param-val" id="param-p1">5</div><div class="param-lbl" id="param-p1-lbl">Inclinación</div></div>
       <div class="param-box"><div class="param-val" id="param-p2">2</div><div class="param-lbl" id="param-p2-lbl">Resistencia</div></div>
       <div class="param-box"><div class="param-val" id="param-pace" style="font-size:13px;padding-top:4px">Lento</div><div class="param-lbl">Ritmo</div></div>
-    </div>
-    <div class="exercise-box" id="current-exercise">
-      <img class="exercise-gif" id="current-exercise-img" alt="">
-      <div class="exercise-status" id="current-exercise-status"></div>
     </div>
   </div>
 
@@ -322,13 +314,9 @@ input, textarea { -webkit-user-select:text; user-select:text; }
     <div class="gym-phase" id="gym-phase">Calentamiento</div>
     <div class="gym-timer" id="gym-timer">3:00</div>
     <div class="gym-sub" id="gym-sub">00:00 / 30:00 · 0 kcal</div>
-    <div class="gym-params" id="gym-params">
+    <div class="gym-params">
       <div class="gym-p"><div class="gym-p-val" id="gym-p1">5</div><div class="gym-p-lbl" id="gym-p1-lbl">Inclinación</div></div>
       <div class="gym-p"><div class="gym-p-val" id="gym-p2">2</div><div class="gym-p-lbl" id="gym-p2-lbl">Resistencia</div></div>
-    </div>
-    <div class="gym-exercise" id="gym-exercise">
-      <img class="gym-exercise-gif" id="gym-exercise-img" alt="">
-      <div class="exercise-status" id="gym-exercise-status"></div>
     </div>
     <div class="gym-next" id="gym-next">Sigue: Zona aeróbica</div>
     <div class="gym-bar"><div class="gym-bar-fill" id="gym-bar-fill"></div></div>
@@ -370,7 +358,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 
     <div class="set-group">
       <div class="set-label">Equipo</div>
-      <div class="grid-4" id="machine-grid"></div>
+      <div class="grid-3" id="machine-grid"></div>
     </div>
 
     <div class="set-group">
@@ -459,7 +447,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 <script>
 /* =====================================================================
    QUEMAGRASA v3
-   - 4 niveles · 3 duraciones · 4 máquinas · 12 colores
+   - 4 niveles · 3 duraciones · 3 máquinas · 12 colores
    - Motor de tiempo con reloj real (exacto en segundo plano)
    - Pre-aviso 10 s antes del sprint
    - Ajuste ± en vivo (con o sin propagación)
@@ -509,15 +497,6 @@ const MACHINES = {
     frac:{ easy:[0.10,0.15], moderate:[0.28,0.35], intense:[0.50,0.60], recovery:[0.10,0.18] },
     ramp:{ easy:[0,0],       moderate:[0.04,0.04], intense:[0.06,0.05], recovery:[0,0] },
     pace:{ easy:"Suave", moderate:"Constante", intense:"Rápido", recovery:"Suave" }
-  },
-  casa: {
-    label:"Casa", icon:"🏠", bodyweight:true,
-    aeroName:"Bloque aeróbico", sprintName:"⚡ Bloque intenso",
-    p1lbl:"", u1:"", min1:0, max1:0, dec1:0, badge1:()=>'',
-    p2lbl:"", u2:"", min2:0, max2:0, dec2:0, badge2:()=>'',
-    frac:{ easy:[0,0], moderate:[0,0], intense:[0,0], recovery:[0,0] },
-    ramp:{ easy:[0,0], moderate:[0,0], intense:[0,0], recovery:[0,0] },
-    pace:{ easy:"", moderate:"", intense:"", recovery:"" }
   }
 };
 
@@ -554,51 +533,9 @@ function fmt2(s){ s=Math.max(0,Math.floor(s)); return `${Math.floor(s/60).toStri
 function vibrate(p){ if(navigator.vibrate) try{navigator.vibrate(p);}catch(e){} }
 function kcalPerSec(type){ return (TYPE_MET[type]*LEVELS[levelKey].met*3.5*userWeight/200)/60; }
 
-/* ---------- modo Casa: datos de ejercicios ---------- */
-const CASA_URL = 'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/bodyweight.json';
-const CASA_CATEGORY_BY_TYPE = { easy:'stretching', moderate:'cardio', recovery:'stretching' };
-let CASA_STATE = { status:'idle', byCategory:{}, error:null };
-
-async function ensureCasaExercises(){
-  if(CASA_STATE.status==='ready') return true;
-  if(CASA_STATE.status==='loading') return false;
-  CASA_STATE = { status:'loading', byCategory:{}, error:null };
-  try{
-    const res = await fetch(CASA_URL);
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const data = await res.json();
-    const byCategory = {};
-    data.exercises.forEach(e=>{ (byCategory[e.category] = byCategory[e.category]||[]).push(e); });
-    CASA_STATE = { status:'ready', byCategory, error:null };
-    return true;
-  }catch(e){
-    CASA_STATE = { status:'error', byCategory:{}, error:(e&&e.message)||'error' };
-    return false;
-  }
-}
-
-function casaCategoryFor(type, levelKey){
-  if(type==='intense') return (levelKey==='dificil'||levelKey==='espartano') ? 'plyometrics' : 'cardio';
-  return CASA_CATEGORY_BY_TYPE[type] || 'strength';
-}
-
-function assignCasaExercises(intervals, levelKey){
-  if(CASA_STATE.status!=='ready'){ intervals.forEach(iv=>{ iv.exercise=null; }); return; }
-  const nextIdx={};
-  intervals.forEach(iv=>{
-    const cat=casaCategoryFor(iv.type, levelKey);
-    const pool=CASA_STATE.byCategory[cat]||[];
-    if(!pool.length){ iv.exercise=null; return; }
-    if(nextIdx[cat]===undefined) nextIdx[cat]=Math.floor(Math.random()*pool.length);
-    iv.exercise=pool[nextIdx[cat]%pool.length];
-    nextIdx[cat]++;
-  });
-}
-
 /* ---------- construcción del plan ---------- */
 function paramFor(type, cycle){
   const m=MACHINES[machineKey], L=LEVELS[levelKey];
-  if(m.bodyweight) return { p1:0, p2:0, pace:'' };
   const scale=(type==='easy'||type==='recovery') ? (1+(L.mult-1)*0.35) : L.mult;
   let f1=(m.frac[type][0] + m.ramp[type][0]*cycle)*scale;
   let f2=(m.frac[type][1] + m.ramp[type][1]*cycle)*scale;
@@ -633,7 +570,6 @@ function buildPlan(){
   if(lastInt>=0) INTERVALS[lastInt].name = "⚡ Sprint final";
   TOTAL_SECONDS=t;
   TOTAL_SPRINTS=INTERVALS.filter(i=>i.sprint).length;
-  if(MACHINES[machineKey].bodyweight) assignCasaExercises(INTERVALS, levelKey);
 }
 
 /* ---------- audio ---------- */
@@ -775,9 +711,8 @@ function showAlert(iv){
   else { icon='🔄'; title=m.aeroName; msg='Ritmo constante.'; vibrate(200); beep(587,0.18,0.22); }
   document.getElementById('alert-icon').textContent=icon;
   document.getElementById('alert-title').textContent=title;
-  document.getElementById('alert-sub').textContent = m.bodyweight
-    ? msg
-    : `${m.p1lbl} → ${iv.p1}${m.u1?' '+m.u1:''}\n${m.p2lbl} → ${iv.p2}${m.u2?' '+m.u2:''}\n${msg}`;
+  document.getElementById('alert-sub').textContent=
+    `${m.p1lbl} → ${iv.p1}${m.u1?' '+m.u1:''}\n${m.p2lbl} → ${iv.p2}${m.u2?' '+m.u2:''}\n${msg}`;
   const o=document.getElementById('alert-overlay');
   if(!gymOpen){ o.classList.add('show'); setTimeout(()=>o.classList.remove('show'),3500); }
 }
@@ -785,7 +720,6 @@ function showAlert(iv){
 /* ---------- ajuste ± en vivo ---------- */
 function adjustParam(which, dir){
   const m=MACHINES[machineKey], iv=INTERVALS[currentIdx];
-  if(m.bodyweight) return;
   const key = which===1?'p1':'p2';
   const dec = which===1?m.dec1:m.dec2;
   const min = which===1?m.min1:m.min2;
@@ -849,11 +783,10 @@ function rebuildTimeline(){
   INTERVALS.forEach((iv,i)=>{
     const el=document.createElement('div');
     el.className='tl-item'+(i===0?' active':' upcoming'); el.id='tl-'+i;
-    const badges = m.bodyweight ? '' : `<div class="tl-badges"><span class="tl-badge">${m.badge1(iv.p1)}</span><span class="tl-badge">${m.badge2(iv.p2)}</span></div>`;
     el.innerHTML=`<div class="tl-dot" style="background:${iv.color}"></div>
       <div class="tl-min">${fmt2(iv.start)}</div>
       <div class="tl-name">${iv.name}</div>
-      ${badges}`;
+      <div class="tl-badges"><span class="tl-badge">${m.badge1(iv.p1)}</span><span class="tl-badge">${m.badge2(iv.p2)}</span></div>`;
     tlList.appendChild(el);
   });
   programmaticScroll=true; tlScroll.scrollTop=0;
@@ -867,14 +800,6 @@ function openGym(){ if(!gymEnabled) return; gymOpen=true;
 function closeGym(){ gymOpen=false; document.getElementById('gym-overlay').classList.remove('show'); }
 
 /* ---------- UI ---------- */
-function renderExerciseBox(imgId, statusId, iv){
-  const img=document.getElementById(imgId), status=document.getElementById(statusId);
-  if(CASA_STATE.status==='loading'||CASA_STATE.status==='idle'){ img.removeAttribute('src'); img.style.display='none'; status.textContent='Cargando ejercicios…'; return; }
-  if(CASA_STATE.status==='error'){ img.removeAttribute('src'); img.style.display='none'; status.textContent='No se pudo cargar (revisa tu internet).'; return; }
-  if(!iv.exercise){ img.removeAttribute('src'); img.style.display='none'; status.textContent='Sin ejercicios disponibles.'; return; }
-  img.src=iv.exercise.gifUrl; img.alt=iv.exercise.name; img.style.display='';
-  status.textContent=iv.exercise.name;
-}
 function updateUI(){
   const m=MACHINES[machineKey], iv=INTERVALS[currentIdx], next=INTERVALS[currentIdx+1];
   const left=iv.end-elapsed;
@@ -886,24 +811,18 @@ function updateUI(){
   document.getElementById('current-card').style.borderColor=iv.color+'66';
   document.getElementById('current-name').textContent=iv.name;
   document.getElementById('current-time-range').textContent=`${fmt2(iv.start)}–${fmt2(iv.end)}`;
-  document.getElementById('current-params').style.display = m.bodyweight?'none':'grid';
-  document.getElementById('current-exercise').style.display = m.bodyweight?'flex':'none';
-  if(m.bodyweight){
-    renderExerciseBox('current-exercise-img','current-exercise-status', iv);
-  } else {
-    document.getElementById('param-p1-lbl').textContent=m.p1lbl;
-    document.getElementById('param-p2-lbl').textContent=m.p2lbl;
-    document.getElementById('param-p1').innerHTML=`${iv.p1}<span class="param-unit">${m.u1}</span>`;
-    document.getElementById('param-p2').innerHTML=`${iv.p2}<span class="param-unit">${m.u2}</span>`;
-    document.getElementById('param-pace').textContent=iv.pace;
-    document.getElementById('adj-lbl-1').textContent=m.p1lbl;
-    document.getElementById('adj-lbl-2').textContent=m.p2lbl;
-  }
+  document.getElementById('param-p1-lbl').textContent=m.p1lbl;
+  document.getElementById('param-p2-lbl').textContent=m.p2lbl;
+  document.getElementById('param-p1').innerHTML=`${iv.p1}<span class="param-unit">${m.u1}</span>`;
+  document.getElementById('param-p2').innerHTML=`${iv.p2}<span class="param-unit">${m.u2}</span>`;
+  document.getElementById('param-pace').textContent=iv.pace;
+  document.getElementById('adj-lbl-1').textContent=m.p1lbl;
+  document.getElementById('adj-lbl-2').textContent=m.p2lbl;
 
   const nc=document.getElementById('next-card');
   if(next){
     document.getElementById('next-name').textContent=next.name;
-    document.getElementById('next-params').textContent = m.bodyweight ? '' : `${m.badge1(next.p1)} · ${m.badge2(next.p2)}`;
+    document.getElementById('next-params').textContent=`${m.badge1(next.p1)} · ${m.badge2(next.p2)}`;
     nc.style.display='';
   } else nc.style.display='none';
 
@@ -930,18 +849,12 @@ function updateUI(){
     document.getElementById('gym-timer').textContent=fmt(left);
     document.getElementById('gym-timer').style.color=iv.color;
     document.getElementById('gym-sub').textContent=`${fmt2(elapsed)} / ${fmt2(TOTAL_SECONDS)} · ${Math.round(kcal)} kcal`;
-    document.getElementById('gym-params').style.display = m.bodyweight?'none':'flex';
-    document.getElementById('gym-exercise').style.display = m.bodyweight?'flex':'none';
-    if(m.bodyweight){
-      renderExerciseBox('gym-exercise-img','gym-exercise-status', iv);
-    } else {
-      document.getElementById('gym-p1').innerHTML=`${iv.p1}<span class="gym-p-unit">${m.u1}</span>`;
-      document.getElementById('gym-p2').innerHTML=`${iv.p2}<span class="gym-p-unit">${m.u2}</span>`;
-      document.getElementById('gym-p1-lbl').textContent=m.p1lbl;
-      document.getElementById('gym-p2-lbl').textContent=m.p2lbl;
-    }
+    document.getElementById('gym-p1').innerHTML=`${iv.p1}<span class="gym-p-unit">${m.u1}</span>`;
+    document.getElementById('gym-p2').innerHTML=`${iv.p2}<span class="gym-p-unit">${m.u2}</span>`;
+    document.getElementById('gym-p1-lbl').textContent=m.p1lbl;
+    document.getElementById('gym-p2-lbl').textContent=m.p2lbl;
     document.getElementById('gym-next').textContent = next
-      ? (m.bodyweight ? `Sigue: ${next.name}` : `Sigue: ${next.name} · ${m.badge1(next.p1)} · ${m.badge2(next.p2)}`)
+      ? `Sigue: ${next.name} · ${m.badge1(next.p1)} · ${m.badge2(next.p2)}`
       : 'Último bloque 💪';
     const fill=document.getElementById('gym-bar-fill');
     fill.style.width=(elapsed/TOTAL_SECONDS*100)+'%';
@@ -954,9 +867,6 @@ function updateUI(){
 function buildCalib(){
   const m=MACHINES[machineKey], box=document.getElementById('calib-box');
   if(!box) return;
-  const group=box.closest('.set-group');
-  if(m.bodyweight){ box.innerHTML=''; if(group) group.style.display='none'; return; }
-  if(group) group.style.display='';
   box.innerHTML='';
   [['max1','p1lbl','u1'],['max2','p2lbl','u2']].forEach(([mk,lk,uk])=>{
     const row=document.createElement('div');
@@ -976,30 +886,18 @@ function setMax(key,v){
   buildPlan(); rebuildTimeline(); resetTimer();
 }
 
-function updateAdjustVisibility(){
-  const show = adjustOn && !MACHINES[machineKey].bodyweight;
-  document.getElementById('adjust-row').style.display = show?'flex':'none';
-  document.getElementById('propagate-row').style.display = show?'flex':'none';
-}
 function refreshHeader(){
   const L=LEVELS[levelKey], m=MACHINES[machineKey];
   document.getElementById('topbar-title').textContent=`${m.icon} ${m.label} · ${L.label} · ${durKey}′`;
   document.getElementById('plan-title').textContent=`Programa · ${TOTAL_SPRINTS} sprints`;
   buildCalib();
-  updateAdjustVisibility();
 }
 
 /* ---------- configuración ---------- */
 function rebuildAll(){ buildPlan(); rebuildTimeline(); refreshHeader(); resetTimer(); }
 function selectLevel(k){ levelKey=k; durKey=LEVELS[k].defDur; syncButtons(); rebuildAll(); }
 function selectDuration(d){ durKey=d; syncButtons(); rebuildAll(); }
-async function selectMachine(k){
-  machineKey=k; syncButtons(); rebuildAll();
-  if(MACHINES[k].bodyweight){
-    await ensureCasaExercises();
-    if(machineKey===k && !running) rebuildAll();
-  }
-}
+function selectMachine(k){ machineKey=k; syncButtons(); rebuildAll(); }
 function syncButtons(){
   document.querySelectorAll('#level-grid .opt-btn').forEach(b=>b.classList.toggle('active', b.dataset.key===levelKey));
   document.querySelectorAll('#duration-grid .opt-btn').forEach(b=>b.classList.toggle('active', +b.dataset.key===durKey));
@@ -1032,7 +930,8 @@ function togglePreWarn(){ preWarn=!preWarn;
   if(!preWarn) hidePreWarn(); }
 function toggleAdjust(){ adjustOn=!adjustOn;
   document.getElementById('adjust-toggle-row').classList.toggle('on',adjustOn);
-  updateAdjustVisibility(); }
+  document.getElementById('adjust-row').style.display=adjustOn?'flex':'none';
+  document.getElementById('propagate-row').style.display=adjustOn?'flex':'none'; }
 function togglePropagate(){ propagate=!propagate;
   document.getElementById('propagate-row').classList.toggle('on',propagate); }
 function toggleGymEnabled(){ gymEnabled=!gymEnabled;
@@ -1108,7 +1007,8 @@ function syncToggleUI(){
   [['bgmode-row',bgMode],['sound-row',soundOn],['prewarn-row',preWarn],
    ['adjust-toggle-row',adjustOn],['propagate-row',propagate],['gym-toggle-row',gymEnabled]]
     .forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.classList.toggle('on',v); });
-  updateAdjustVisibility();
+  document.getElementById('adjust-row').style.display=adjustOn?'flex':'none';
+  document.getElementById('propagate-row').style.display=adjustOn?'flex':'none';
   document.getElementById('gym-btn').style.display=gymEnabled?'':'none';
 }
 
@@ -1137,10 +1037,6 @@ async function loadSettings(){
   document.getElementById('music-btn').href=musicLink;
   syncToggleUI(); syncButtons(); applyTheme(themeKey);
   buildPlan(); rebuildTimeline(); refreshHeader(); resetTimer();
-  if(MACHINES[machineKey].bodyweight){
-    await ensureCasaExercises();
-    if(!running){ buildPlan(); rebuildTimeline(); refreshHeader(); resetTimer(); }
-  }
 }
 
 /* ---------- historial y racha ---------- */
