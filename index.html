@@ -29,24 +29,19 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 .hero-title { font-size:26px; font-weight:800; letter-spacing:-.01em; }
 .hero-sub { font-size:12.5px; color:var(--muted); margin-top:6px; }
 
-.mode-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.mode-card { grid-column:span 1; width:100%; background:var(--surface); border:1.5px solid var(--border);
-  border-radius:18px; padding:20px 12px; text-align:center; cursor:pointer; color:var(--text);
-  text-decoration:none; display:block; font-family:'Syne',sans-serif;
+.mode-list { display:flex; flex-direction:column; gap:8px; }
+.mode-row { display:flex; align-items:center; gap:14px; width:100%; background:var(--surface);
+  border:1.5px solid var(--border); border-radius:14px; padding:14px 16px; text-align:left;
+  cursor:pointer; color:var(--text); text-decoration:none; font-family:'Syne',sans-serif;
   -webkit-tap-highlight-color:transparent; transition:border-color .15s; }
-.mode-card:active { border-color:var(--accent); }
-.mode-card.wide { grid-column:span 2; display:flex; align-items:center; justify-content:center; gap:12px;
-  padding:16px 12px; }
-.mode-icon { font-size:28px; display:block; margin-bottom:8px; }
-.mode-card.wide .mode-icon { margin-bottom:0; font-size:24px; }
-.mode-name { font-weight:800; font-size:14.5px; display:block; }
-.mode-sub { font-size:10px; color:var(--muted); margin-top:3px; display:block; }
-.mode-card.wide .mode-name { font-size:14px; }
-.mode-card.accent { background:var(--surface2); border-color:var(--accent); }
-.mode-card.accent .mode-sub { color:#c98a2e; }
-
-.section-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em;
-  margin:22px 0 10px; }
+.mode-row:active { border-color:var(--accent); }
+.mode-row .mode-icon { font-size:23px; flex-shrink:0; width:30px; text-align:center; }
+.mode-row .mode-text { flex:1; min-width:0; }
+.mode-row .mode-name { font-weight:800; font-size:15px; display:block; }
+.mode-row .mode-sub { font-size:11px; color:var(--muted); margin-top:2px; display:block; }
+.mode-row .mode-chevron { color:var(--muted); font-size:15px; flex-shrink:0; }
+.mode-row.accent { border-color:var(--accent); background:var(--surface2); }
+.mode-row.accent .mode-sub { color:#c98a2e; }
 
 .flame { cursor:pointer; display:inline-block; -webkit-tap-highlight-color:transparent; }
 .egg-overlay { position:fixed; inset:0; background:#0d0d0f; display:flex; align-items:center; justify-content:center;
@@ -65,37 +60,36 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
     <div class="hero-sub">Elige cómo quieres entrenar hoy</div>
   </div>
 
-  <div class="mode-grid">
-    <a class="mode-card" href="entrenamientos.html">
+  <div class="mode-list">
+    <a class="mode-row" href="entrenamientos.html">
       <span class="mode-icon">🏠</span>
-      <span class="mode-name">Casa</span>
-      <span class="mode-sub">Plan de 30 días</span>
+      <span class="mode-text"><span class="mode-name">Casa</span><span class="mode-sub">Plan de 30 días</span></span>
+      <span class="mode-chevron">›</span>
     </a>
-    <a class="mode-card" href="cardio.html?m=eliptica">
-      <span class="mode-icon">🌀</span>
-      <span class="mode-name">Elíptica</span>
-      <span class="mode-sub">Timer HIIT</span>
-    </a>
-    <a class="mode-card" href="cardio.html?m=caminadora">
-      <span class="mode-icon">🏃</span>
-      <span class="mode-name">Caminadora</span>
-      <span class="mode-sub">Timer HIIT</span>
-    </a>
-    <a class="mode-card" href="cardio.html?m=escaladora">
-      <span class="mode-icon">🪜</span>
-      <span class="mode-name">Escaladora</span>
-      <span class="mode-sub">Timer HIIT</span>
-    </a>
-  </div>
-
-  <div class="section-label">O si tienes poco tiempo</div>
-  <div class="mode-grid">
-    <a class="mode-card wide accent" href="rapido.html">
+    <a class="mode-row accent" href="rapido.html">
       <span class="mode-icon">⚡</span>
-      <span>
-        <span class="mode-name">Ejercicio rápido</span>
-        <span class="mode-sub">10 min · 8 ejercicios al azar</span>
-      </span>
+      <span class="mode-text"><span class="mode-name">Ejercicio rápido</span><span class="mode-sub">10 min · 8 ejercicios al azar</span></span>
+      <span class="mode-chevron">›</span>
+    </a>
+    <a class="mode-row" href="cardio.html?m=eliptica">
+      <span class="mode-icon">🌀</span>
+      <span class="mode-text"><span class="mode-name">Elíptica</span><span class="mode-sub">Timer HIIT</span></span>
+      <span class="mode-chevron">›</span>
+    </a>
+    <a class="mode-row" href="cardio.html?m=caminadora">
+      <span class="mode-icon">🏃</span>
+      <span class="mode-text"><span class="mode-name">Caminadora</span><span class="mode-sub">Timer HIIT</span></span>
+      <span class="mode-chevron">›</span>
+    </a>
+    <a class="mode-row" href="cardio.html?m=escaladora">
+      <span class="mode-icon">🪜</span>
+      <span class="mode-text"><span class="mode-name">Escaladora</span><span class="mode-sub">Timer HIIT</span></span>
+      <span class="mode-chevron">›</span>
+    </a>
+    <a class="mode-row" href="correr.html">
+      <span class="mode-icon">🏃‍♂️</span>
+      <span class="mode-text"><span class="mode-name">Correr / Caminar</span><span class="mode-sub">GPS · ruta · pasos</span></span>
+      <span class="mode-chevron">›</span>
     </a>
   </div>
 </div>

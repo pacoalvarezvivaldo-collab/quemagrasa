@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Correr">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d0d0f">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: https://unpkg.com https://*.tile.openstreetmap.org; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
+<title>Correr / Caminar</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+:root {
+  --bg:#0d0d0f; --surface:#18181c; --surface2:#222228;
+  --border:rgba(255,255,255,0.08); --text:#f0efe8; --muted:#777;
+  --accent:#EF9F27; --accent-text:#000;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+html, body { height:100%; background:var(--bg); overscroll-behavior:none; }
+body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-top);
+  -webkit-user-select:none; user-select:none; touch-action:manipulation; }
+
+.topbar { display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px 9px 18px; border-bottom:1px solid var(--border); }
+.topbar-title { font-size:13px; font-weight:800; letter-spacing:.03em; }
+.gear-btn { background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  width:34px; height:34px; border-radius:10px; font-size:15px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; text-decoration:none;
+  -webkit-tap-highlight-color:transparent; }
+
+.screen { display:none; }
+.screen.show { display:block; }
+.pad { padding:22px calc(20px + env(safe-area-inset-right,0px)) calc(24px + var(--safe-bot));
+  max-width:480px; margin:0 auto; }
+
+/* ---- setup ---- */
+.mode-toggle { display:flex; gap:8px; margin-bottom:18px; }
+.mode-btn { flex:1; background:var(--surface); border:1.5px solid var(--border); color:var(--text);
+  border-radius:14px; padding:16px 8px; text-align:center; cursor:pointer; font-family:'Syne',sans-serif;
+  -webkit-tap-highlight-color:transparent; }
+.mode-btn .m-icon { font-size:24px; display:block; margin-bottom:4px; }
+.mode-btn .m-name { font-weight:800; font-size:13px; }
+.mode-btn.active { border-color:var(--accent); background:var(--surface2); color:var(--accent); }
+
+.privacy-note { font-size:11.5px; color:var(--muted); line-height:1.6; background:var(--surface);
+  border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:18px; }
+
+.field-row { display:flex; align-items:center; justify-content:space-between; background:var(--surface);
+  border:1px solid var(--border); border-radius:12px; padding:11px 14px; margin-bottom:18px; }
+.field-label { font-size:12.5px; font-weight:700; }
+.field-input { background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  border-radius:10px; padding:8px 10px; font-family:'Space Mono',monospace; font-size:14px;
+  width:70px; text-align:center; -webkit-appearance:none; }
+
+.start-btn { width:100%; background:var(--accent); color:var(--accent-text); border:none;
+  border-radius:16px; padding:17px; font-weight:800; font-size:16px; font-family:'Syne',sans-serif;
+  cursor:pointer; -webkit-tap-highlight-color:transparent; }
+
+.hist-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; margin:22px 0 8px; }
+.hist-row { display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);
+  font-size:12.5px; }
+.hist-row span:first-child { color:var(--muted); font-family:'Space Mono',monospace; width:42px; flex-shrink:0; }
+.hist-row span:nth-child(2) { flex:1; }
+.hist-row span:last-child { color:var(--muted); font-family:'Space Mono',monospace; }
+.hist-empty { font-size:12px; color:var(--muted); }
+
+/* ---- activo ---- */
+#active-screen.show { display:flex; flex-direction:column; height:calc(100vh - 58px); }
+#map { flex:1; min-height:0; background:var(--surface2); }
+.gps-status { position:absolute; top:70px; left:50%; transform:translateX(-50%); background:var(--surface);
+  border:1px solid var(--border); border-radius:20px; padding:8px 18px; font-size:12.5px; color:var(--muted); z-index:1000; }
+.stats-bar { flex:0 0 auto; background:var(--bg); border-top:1px solid var(--border);
+  padding:16px 18px calc(16px + var(--safe-bot)); }
+.stats-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px; }
+.stat-box { text-align:center; }
+.stat-val { font-family:'Space Mono',monospace; font-size:20px; font-weight:700; }
+.stat-lbl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-top:2px; }
+.run-controls { display:flex; gap:10px; }
+.r-btn { flex:1; border:none; border-radius:14px; padding:14px; font-family:'Syne',sans-serif;
+  font-size:14px; font-weight:700; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.r-btn-pause { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+.r-btn-stop { background:#E24B4A; color:#fff; }
+
+/* ---- resumen ---- */
+#summary-screen .pad { text-align:center; }
+#summary-map { width:100%; height:220px; border-radius:16px; margin-bottom:18px; background:var(--surface2); }
+.summary-title { font-size:22px; font-weight:800; margin-bottom:16px; }
+.summary-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+.summary-stat { background:var(--surface); border-radius:14px; padding:14px; }
+.summary-stat .stat-val { font-size:24px; }
+.summary-actions { display:flex; flex-direction:column; gap:10px; }
+.sum-btn { border:none; border-radius:14px; padding:15px; font-weight:700; font-family:'Syne',sans-serif;
+  cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.sum-btn.primary { background:var(--accent); color:var(--accent-text); }
+.sum-btn.secondary { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+.toast { position:fixed; left:50%; bottom:calc(24px + var(--safe-bot)); transform:translateX(-50%);
+  background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:10px 18px;
+  font-size:12.5px; opacity:0; pointer-events:none; transition:opacity .25s; z-index:500; }
+.toast.show { opacity:1; }
+
+/* ---- error de permiso ---- */
+.perm-box { text-align:center; padding-top:60px; }
+.perm-icon { font-size:48px; }
+.perm-title { font-size:18px; font-weight:800; margin-top:12px; }
+.perm-sub { font-size:13px; color:var(--muted); margin-top:8px; line-height:1.6; }
+.perm-btn { margin-top:22px; background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  border-radius:14px; padding:13px 28px; font-weight:700; font-family:'Syne',sans-serif; cursor:pointer;
+  -webkit-tap-highlight-color:transparent; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="gear-btn" href="index.html" title="Volver al inicio">←</a>
+  <span class="topbar-title">🏃 Correr / Caminar</span>
+  <span style="width:34px"></span>
+</div>
+
+<div class="screen show" id="setup-screen">
+  <div class="pad">
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="mode-btn-correr" onclick="setMode('correr')">
+        <span class="m-icon">🏃</span><span class="m-name">Correr</span>
+      </button>
+      <button class="mode-btn" id="mode-btn-caminar" onclick="setMode('caminar')">
+        <span class="m-icon">🚶</span><span class="m-name">Caminar</span>
+      </button>
+    </div>
+
+    <div class="privacy-note">📍 Vamos a pedirte acceso a tu ubicación para trazar la ruta en un mapa y calcular distancia/pasos. Todo se queda en tu teléfono — no se sube a ningún servidor.</div>
+
+    <div class="field-row">
+      <span class="field-label">Tu peso (para kcal)</span>
+      <div>
+        <input class="field-input" id="weight-input" type="number" inputmode="numeric" min="30" max="250" value="70" oninput="saveWeight(this.value)">
+        <span style="font-size:12px;color:var(--muted)">kg</span>
+      </div>
+    </div>
+
+    <button class="start-btn" onclick="startTracking()" id="start-btn">▶ Iniciar</button>
+
+    <div class="hist-label">Historial reciente</div>
+    <div id="history-box"><div class="hist-empty">Termina tu primera sesión y aparecerá aquí.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="perm-screen">
+  <div class="pad">
+    <div class="perm-box">
+      <div class="perm-icon">📍</div>
+      <div class="perm-title" id="perm-title">No pudimos acceder a tu ubicación</div>
+      <div class="perm-sub" id="perm-sub">Actívala en los ajustes de tu navegador y vuelve a intentar.</div>
+      <button class="perm-btn" onclick="backToSetup()">Volver</button>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="active-screen">
+  <div id="map"></div>
+  <div class="gps-status" id="gps-status" style="display:none">Buscando señal GPS…</div>
+  <div class="stats-bar">
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-val" id="stat-time">0:00</div><div class="stat-lbl">Tiempo</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-dist">0.00</div><div class="stat-lbl">Km</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-pace">--:--</div><div class="stat-lbl">Min/km</div></div>
+    </div>
+    <div class="run-controls">
+      <button class="r-btn r-btn-pause" id="btn-run-pause" onclick="togglePauseRun()">⏸ Pausar</button>
+      <button class="r-btn r-btn-stop" onclick="stopTracking()">■ Detener</button>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="summary-screen">
+  <div class="pad">
+    <div class="summary-title" id="summary-title">¡Sesión completa!</div>
+    <div id="summary-map"></div>
+    <div class="summary-stats">
+      <div class="summary-stat"><div class="stat-val" id="sum-dist">0.00 km</div><div class="stat-lbl">Distancia</div></div>
+      <div class="summary-stat"><div class="stat-val" id="sum-time">0:00</div><div class="stat-lbl">Tiempo</div></div>
+      <div class="summary-stat"><div class="stat-val" id="sum-pace">--:--</div><div class="stat-lbl">Ritmo min/km</div></div>
+      <div class="summary-stat"><div class="stat-val" id="sum-steps">0</div><div class="stat-lbl">Pasos (estimados)</div></div>
+    </div>
+    <div class="summary-actions">
+      <button class="sum-btn primary" onclick="shareRun()">📤 Compartir</button>
+      <button class="sum-btn secondary" onclick="backToSetup()">Volver al inicio</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/* =====================================================================
+   CORRER / CAMINAR — rastreo GPS, mapa Leaflet+OSM, pasos estimados
+   por distancia, kcal por MET, compartir nativo. Todo local — la
+   ubicación nunca sale del teléfono (sin fetch, sin servidor propio).
+   ===================================================================== */
+
+const STRIDE_M = { correr:1.15, caminar:0.75 };
+const MET = { correr:9.8, caminar:3.8 };
+const MIN_MOVE_M = 3;
+const MIN_ACCURACY_M = 30;
+
+const KEY_HISTORY = 'correr_history', KEY_WEIGHT = 'correr_weight', KEY_MODE = 'correr_mode';
+
+let mode = 'correr';
+let userWeight = 70;
+let tracking = false, paused = false;
+let watchId = null, tickTimerId = null;
+let points = [], distanceM = 0;
+let startTime = 0, totalPausedMs = 0, pauseStart = 0;
+let map = null, routeLine = null, userMarker = null;
+let lastResult = null;
+
+/* ---------- persistencia ---------- */
+function loadHistory(){ try{ return JSON.parse(localStorage.getItem(KEY_HISTORY))||[]; }catch(e){ return []; } }
+function saveHistoryEntry(entry){
+  const h = loadHistory();
+  h.push(entry);
+  if(h.length>50) h.splice(0, h.length-50);
+  try{ localStorage.setItem(KEY_HISTORY, JSON.stringify(h)); }catch(e){}
+}
+function saveWeight(v){
+  const n = parseFloat(v);
+  if(!isNaN(n) && n>0){ userWeight = n; try{ localStorage.setItem(KEY_WEIGHT, String(n)); }catch(e){} }
+}
+function loadWeight(){ try{ const v=parseFloat(localStorage.getItem(KEY_WEIGHT)); return v>0?v:70; }catch(e){ return 70; } }
+function saveModePref(){ try{ localStorage.setItem(KEY_MODE, mode); }catch(e){} }
+function loadModePref(){ try{ return localStorage.getItem(KEY_MODE); }catch(e){ return null; } }
+
+/* ---------- audio/vibración (mismo patrón que el resto de la app) ---------- */
+let actx=null;
+function initAudio(){
+  if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if(actx && actx.state==='suspended') actx.resume();
+}
+function beep(freq,dur,vol){
+  if(!actx) return;
+  try{
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.type='sine'; o.frequency.value=freq;
+    g.gain.setValueAtTime(vol||0.25, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime+dur);
+    o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime+dur);
+  }catch(e){}
+}
+function vibrate(p){ if(navigator.vibrate) try{ navigator.vibrate(p); }catch(e){} }
+document.body.addEventListener('touchstart', initAudio, {once:true});
+document.body.addEventListener('click', initAudio, {once:true});
+
+/* ---------- pantalla encendida mientras se rastrea ---------- */
+let wakeLock = null;
+async function requestWakeLock(){
+  if('wakeLock' in navigator) try{ wakeLock = await navigator.wakeLock.request('screen'); }catch(e){}
+}
+async function releaseWakeLock(){
+  if(wakeLock){ try{ await wakeLock.release(); }catch(e){} wakeLock = null; }
+}
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible' && tracking && !paused) requestWakeLock();
+});
+
+/* ---------- pantallas ---------- */
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));
+  document.getElementById(name+'-screen').classList.add('show');
+}
+function backToSetup(){
+  stopWatchIfAny();
+  clearInterval(tickTimerId);
+  releaseWakeLock();
+  renderHistory();
+  showScreen('setup');
+}
+
+/* ---------- modo ---------- */
+function setMode(k){
+  mode = k;
+  saveModePref();
+  document.getElementById('mode-btn-correr').classList.toggle('active', k==='correr');
+  document.getElementById('mode-btn-caminar').classList.toggle('active', k==='caminar');
+}
+
+/* ---------- utilidades ---------- */
+function haversine(a, b){
+  const R = 6371000, toRad = d => d*Math.PI/180;
+  const dLat = toRad(b.lat-a.lat), dLng = toRad(b.lng-a.lng);
+  const s = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(s));
+}
+function fmtTime(s){
+  s = Math.max(0, Math.floor(s));
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
+  const mm = h>0 ? String(m).padStart(2,'0') : String(m);
+  return (h>0?`${h}:${mm}`:mm) + ':' + String(sec).padStart(2,'0');
+}
+function fmtPace(elapsedS, distM){
+  if(distM < 50) return '--:--';
+  const paceSecPerKm = elapsedS / (distM/1000);
+  const m = Math.floor(paceSecPerKm/60), s = Math.round(paceSecPerKm%60);
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+function stepsFor(distM){ return Math.round(distM / STRIDE_M[mode]); }
+function kcalFor(elapsedS){ return Math.round(MET[mode]*3.5*userWeight/200/60 * elapsedS); }
+
+/* ---------- mapa ---------- */
+function initMap(center){
+  map = L.map('map', { zoomControl:false, attributionControl:true }).setView([center.lat, center.lng], 17);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }).addTo(map);
+  routeLine = L.polyline([[center.lat,center.lng]], { color:'#EF9F27', weight:5 }).addTo(map);
+  userMarker = L.circleMarker([center.lat,center.lng], { radius:8, color:'#EF9F27', fillColor:'#EF9F27', fillOpacity:1, weight:2 }).addTo(map);
+}
+function panMapTo(point){
+  if(!map) return;
+  userMarker.setLatLng([point.lat, point.lng]);
+  map.panTo([point.lat, point.lng], { animate:true });
+}
+
+/* ---------- rastreo GPS ---------- */
+function onPosition(pos){
+  const { latitude:lat, longitude:lng, accuracy } = pos.coords;
+  if(accuracy && accuracy > MIN_ACCURACY_M) return;
+  const point = { lat, lng };
+  if(!points.length){
+    points.push(point);
+    return;
+  }
+  const last = points[points.length-1];
+  const d = haversine(last, point);
+  if(d < MIN_MOVE_M){ panMapTo(point); return; }
+  distanceM += d;
+  points.push(point);
+  if(routeLine) routeLine.addLatLng([lat, lng]);
+  panMapTo(point);
+}
+function onPositionErrorSilent(){ /* lecturas intermitentes durante watchPosition: se ignoran, se sigue intentando */ }
+
+function stopWatchIfAny(){
+  if(watchId != null){ try{ navigator.geolocation.clearWatch(watchId); }catch(e){} watchId = null; }
+}
+
+function startTracking(){
+  if(!('geolocation' in navigator)){
+    showPermScreen('Tu navegador no soporta ubicación', 'No podemos rastrear tu ruta en este dispositivo.');
+    return;
+  }
+  initAudio();
+  points = []; distanceM = 0; totalPausedMs = 0; paused = false;
+  showScreen('active');
+  document.getElementById('gps-status').style.display = '';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const c = { lat:pos.coords.latitude, lng:pos.coords.longitude };
+      initMap(c);
+      points = [c];
+      setTimeout(()=>{ if(map) map.invalidateSize(); }, 50);
+      beginSession();
+    },
+    err => handleGeoError(err),
+    { enableHighAccuracy:true, timeout:15000, maximumAge:0 }
+  );
+}
+
+function beginSession(){
+  tracking = true;
+  startTime = Date.now();
+  document.getElementById('gps-status').style.display = 'none';
+  requestWakeLock();
+  watchId = navigator.geolocation.watchPosition(onPosition, onPositionErrorSilent,
+    { enableHighAccuracy:true, maximumAge:1000, timeout:20000 });
+  tickTimerId = setInterval(updateStats, 1000);
+  updateStats();
+}
+
+function handleGeoError(err){
+  showScreen('setup');
+  if(err && err.code === err.PERMISSION_DENIED){
+    showPermScreen('Necesitamos tu ubicación', 'Actívala en los ajustes del navegador para este sitio y vuelve a intentar.');
+  } else {
+    showPermScreen('No se pudo obtener tu ubicación', 'Revisa que el GPS esté activado e inténtalo de nuevo.');
+  }
+}
+function showPermScreen(title, sub){
+  document.getElementById('perm-title').textContent = title;
+  document.getElementById('perm-sub').textContent = sub;
+  showScreen('perm');
+}
+
+function togglePauseRun(){
+  if(!tracking) return;
+  const btn = document.getElementById('btn-run-pause');
+  if(paused){
+    paused = false;
+    totalPausedMs += Date.now() - pauseStart;
+    watchId = navigator.geolocation.watchPosition(onPosition, onPositionErrorSilent,
+      { enableHighAccuracy:true, maximumAge:1000, timeout:20000 });
+    requestWakeLock();
+    btn.textContent = '⏸ Pausar';
+  } else {
+    paused = true;
+    pauseStart = Date.now();
+    stopWatchIfAny();
+    btn.textContent = '▶ Reanudar';
+  }
+}
+
+function currentElapsedS(){
+  const pausedMs = totalPausedMs + (paused ? (Date.now()-pauseStart) : 0);
+  return Math.floor((Date.now() - startTime - pausedMs) / 1000);
+}
+
+function updateStats(){
+  if(paused) return;
+  const elapsedS = currentElapsedS();
+  document.getElementById('stat-time').textContent = fmtTime(elapsedS);
+  document.getElementById('stat-dist').textContent = (distanceM/1000).toFixed(2);
+  document.getElementById('stat-pace').textContent = fmtPace(elapsedS, distanceM);
+}
+
+function stopTracking(){
+  tracking = false;
+  stopWatchIfAny();
+  clearInterval(tickTimerId);
+  releaseWakeLock();
+  vibrate([200,100,200]); beep(660,0.15,0.25);
+
+  const elapsedS = currentElapsedS();
+  const steps = stepsFor(distanceM);
+  const kcal = kcalFor(elapsedS);
+  lastResult = { mode, distanceM, elapsedS, steps, kcal };
+  saveHistoryEntry({ date: Date.now(), mode, distanceM, elapsedS, steps, kcal });
+
+  document.getElementById('sum-dist').textContent = (distanceM/1000).toFixed(2) + ' km';
+  document.getElementById('sum-time').textContent = fmtTime(elapsedS);
+  document.getElementById('sum-pace').textContent = fmtPace(elapsedS, distanceM);
+  document.getElementById('sum-steps').textContent = steps;
+  document.getElementById('summary-title').textContent =
+    (mode==='correr' ? '🏃 ¡Corrida completa!' : '🚶 ¡Caminata completa!');
+
+  showScreen('summary');
+  renderSummaryMap();
+}
+
+function renderSummaryMap(){
+  const el = document.getElementById('summary-map');
+  el.innerHTML = '';
+  if(points.length < 2){ el.style.display = 'none'; return; }
+  el.style.display = '';
+  const sMap = L.map(el, { zoomControl:false, attributionControl:true, dragging:true, scrollWheelZoom:false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '&copy; OpenStreetMap'
+  }).addTo(sMap);
+  const latlngs = points.map(p=>[p.lat,p.lng]);
+  const line = L.polyline(latlngs, { color:'#EF9F27', weight:5 }).addTo(sMap);
+  setTimeout(()=>{ sMap.invalidateSize(); sMap.fitBounds(line.getBounds(), { padding:[20,20] }); }, 60);
+}
+
+/* ---------- compartir ---------- */
+async function shareRun(){
+  if(!lastResult) return;
+  const km = (lastResult.distanceM/1000).toFixed(2);
+  const t = fmtTime(lastResult.elapsedS);
+  const verbo = lastResult.mode==='correr' ? '🏃 Corrí' : '🚶 Caminé';
+  const text = `${verbo} ${km} km en ${t} — ${lastResult.steps} pasos estimados, ${lastResult.kcal} kcal. #Quemagrasa`;
+  if(navigator.share){
+    try{ await navigator.share({ text }); }catch(e){ /* usuario canceló, no hacer nada */ }
+  } else {
+    try{ await navigator.clipboard.writeText(text); showToast('Copiado — pégalo donde quieras compartirlo'); }
+    catch(e){ showToast(text); }
+  }
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+/* ---------- historial ---------- */
+function renderHistory(){
+  const box = document.getElementById('history-box');
+  const h = loadHistory().slice(-5).reverse();
+  if(!h.length){ box.innerHTML = '<div class="hist-empty">Termina tu primera sesión y aparecerá aquí.</div>'; return; }
+  box.innerHTML = '';
+  h.forEach(e=>{
+    const d = new Date(e.date);
+    const ds = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+    const icon = e.mode==='correr' ? '🏃' : '🚶';
+    const row = document.createElement('div');
+    row.className = 'hist-row';
+    const c1 = document.createElement('span'); c1.textContent = ds;
+    const c2 = document.createElement('span'); c2.textContent = `${icon} ${(e.distanceM/1000).toFixed(2)} km`;
+    const c3 = document.createElement('span'); c3.textContent = fmtTime(e.elapsedS);
+    row.append(c1,c2,c3);
+    box.appendChild(row);
+  });
+}
+
+/* ---------- init ---------- */
+(function init(){
+  userWeight = loadWeight();
+  document.getElementById('weight-input').value = userWeight;
+  const savedMode = loadModePref();
+  if(savedMode==='caminar') setMode('caminar');
+  renderHistory();
+})();
+</script>
+</body>
+</html>
