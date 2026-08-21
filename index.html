@@ -266,7 +266,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
       <div class="current-name" id="current-name">Calentamiento</div>
       <div class="current-time" id="current-time-range">0:00–3:00</div>
     </div>
-    <div class="current-params">
+    <div class="current-params" id="current-params">
       <div class="param-box"><div class="param-val" id="param-p1">5</div><div class="param-lbl" id="param-p1-lbl">Inclinación</div></div>
       <div class="param-box"><div class="param-val" id="param-p2">2</div><div class="param-lbl" id="param-p2-lbl">Resistencia</div></div>
       <div class="param-box"><div class="param-val" id="param-pace" style="font-size:13px;padding-top:4px">Lento</div><div class="param-lbl">Ritmo</div></div>
@@ -322,7 +322,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
     <div class="gym-phase" id="gym-phase">Calentamiento</div>
     <div class="gym-timer" id="gym-timer">3:00</div>
     <div class="gym-sub" id="gym-sub">00:00 / 30:00 · 0 kcal</div>
-    <div class="gym-params">
+    <div class="gym-params" id="gym-params">
       <div class="gym-p"><div class="gym-p-val" id="gym-p1">5</div><div class="gym-p-lbl" id="gym-p1-lbl">Inclinación</div></div>
       <div class="gym-p"><div class="gym-p-val" id="gym-p2">2</div><div class="gym-p-lbl" id="gym-p2-lbl">Resistencia</div></div>
     </div>
@@ -776,8 +776,9 @@ function showAlert(iv){
   else { icon='🔄'; title=m.aeroName; msg='Ritmo constante.'; vibrate(200); beep(587,0.18,0.22); }
   document.getElementById('alert-icon').textContent=icon;
   document.getElementById('alert-title').textContent=title;
-  document.getElementById('alert-sub').textContent=
-    `${m.p1lbl} → ${iv.p1}${m.u1?' '+m.u1:''}\n${m.p2lbl} → ${iv.p2}${m.u2?' '+m.u2:''}\n${msg}`;
+  document.getElementById('alert-sub').textContent = m.bodyweight
+    ? msg
+    : `${m.p1lbl} → ${iv.p1}${m.u1?' '+m.u1:''}\n${m.p2lbl} → ${iv.p2}${m.u2?' '+m.u2:''}\n${msg}`;
   const o=document.getElementById('alert-overlay');
   if(!gymOpen){ o.classList.add('show'); setTimeout(()=>o.classList.remove('show'),3500); }
 }
@@ -785,6 +786,7 @@ function showAlert(iv){
 /* ---------- ajuste ± en vivo ---------- */
 function adjustParam(which, dir){
   const m=MACHINES[machineKey], iv=INTERVALS[currentIdx];
+  if(m.bodyweight) return;
   const key = which===1?'p1':'p2';
   const dec = which===1?m.dec1:m.dec2;
   const min = which===1?m.min1:m.min2;
@@ -848,10 +850,11 @@ function rebuildTimeline(){
   INTERVALS.forEach((iv,i)=>{
     const el=document.createElement('div');
     el.className='tl-item'+(i===0?' active':' upcoming'); el.id='tl-'+i;
+    const badges = m.bodyweight ? '' : `<div class="tl-badges"><span class="tl-badge">${m.badge1(iv.p1)}</span><span class="tl-badge">${m.badge2(iv.p2)}</span></div>`;
     el.innerHTML=`<div class="tl-dot" style="background:${iv.color}"></div>
       <div class="tl-min">${fmt2(iv.start)}</div>
       <div class="tl-name">${iv.name}</div>
-      <div class="tl-badges"><span class="tl-badge">${m.badge1(iv.p1)}</span><span class="tl-badge">${m.badge2(iv.p2)}</span></div>`;
+      ${badges}`;
     tlList.appendChild(el);
   });
   programmaticScroll=true; tlScroll.scrollTop=0;
@@ -865,6 +868,14 @@ function openGym(){ if(!gymEnabled) return; gymOpen=true;
 function closeGym(){ gymOpen=false; document.getElementById('gym-overlay').classList.remove('show'); }
 
 /* ---------- UI ---------- */
+function renderExerciseBox(imgId, statusId, iv){
+  const img=document.getElementById(imgId), status=document.getElementById(statusId);
+  if(CASA_STATE.status==='loading'){ img.removeAttribute('src'); img.style.display='none'; status.textContent='Cargando ejercicios…'; return; }
+  if(CASA_STATE.status==='error'){ img.removeAttribute('src'); img.style.display='none'; status.textContent='No se pudo cargar (revisa tu internet).'; return; }
+  if(!iv.exercise){ img.removeAttribute('src'); img.style.display='none'; status.textContent='Sin ejercicios disponibles.'; return; }
+  img.src=iv.exercise.gifUrl; img.alt=iv.exercise.name; img.style.display='';
+  status.textContent='';
+}
 function updateUI(){
   const m=MACHINES[machineKey], iv=INTERVALS[currentIdx], next=INTERVALS[currentIdx+1];
   const left=iv.end-elapsed;
@@ -876,18 +887,24 @@ function updateUI(){
   document.getElementById('current-card').style.borderColor=iv.color+'66';
   document.getElementById('current-name').textContent=iv.name;
   document.getElementById('current-time-range').textContent=`${fmt2(iv.start)}–${fmt2(iv.end)}`;
-  document.getElementById('param-p1-lbl').textContent=m.p1lbl;
-  document.getElementById('param-p2-lbl').textContent=m.p2lbl;
-  document.getElementById('param-p1').innerHTML=`${iv.p1}<span class="param-unit">${m.u1}</span>`;
-  document.getElementById('param-p2').innerHTML=`${iv.p2}<span class="param-unit">${m.u2}</span>`;
-  document.getElementById('param-pace').textContent=iv.pace;
-  document.getElementById('adj-lbl-1').textContent=m.p1lbl;
-  document.getElementById('adj-lbl-2').textContent=m.p2lbl;
+  document.getElementById('current-params').style.display = m.bodyweight?'none':'grid';
+  document.getElementById('current-exercise').style.display = m.bodyweight?'flex':'none';
+  if(m.bodyweight){
+    renderExerciseBox('current-exercise-img','current-exercise-status', iv);
+  } else {
+    document.getElementById('param-p1-lbl').textContent=m.p1lbl;
+    document.getElementById('param-p2-lbl').textContent=m.p2lbl;
+    document.getElementById('param-p1').innerHTML=`${iv.p1}<span class="param-unit">${m.u1}</span>`;
+    document.getElementById('param-p2').innerHTML=`${iv.p2}<span class="param-unit">${m.u2}</span>`;
+    document.getElementById('param-pace').textContent=iv.pace;
+    document.getElementById('adj-lbl-1').textContent=m.p1lbl;
+    document.getElementById('adj-lbl-2').textContent=m.p2lbl;
+  }
 
   const nc=document.getElementById('next-card');
   if(next){
     document.getElementById('next-name').textContent=next.name;
-    document.getElementById('next-params').textContent=`${m.badge1(next.p1)} · ${m.badge2(next.p2)}`;
+    document.getElementById('next-params').textContent = m.bodyweight ? '' : `${m.badge1(next.p1)} · ${m.badge2(next.p2)}`;
     nc.style.display='';
   } else nc.style.display='none';
 
@@ -914,12 +931,18 @@ function updateUI(){
     document.getElementById('gym-timer').textContent=fmt(left);
     document.getElementById('gym-timer').style.color=iv.color;
     document.getElementById('gym-sub').textContent=`${fmt2(elapsed)} / ${fmt2(TOTAL_SECONDS)} · ${Math.round(kcal)} kcal`;
-    document.getElementById('gym-p1').innerHTML=`${iv.p1}<span class="gym-p-unit">${m.u1}</span>`;
-    document.getElementById('gym-p2').innerHTML=`${iv.p2}<span class="gym-p-unit">${m.u2}</span>`;
-    document.getElementById('gym-p1-lbl').textContent=m.p1lbl;
-    document.getElementById('gym-p2-lbl').textContent=m.p2lbl;
+    document.getElementById('gym-params').style.display = m.bodyweight?'none':'flex';
+    document.getElementById('gym-exercise').style.display = m.bodyweight?'flex':'none';
+    if(m.bodyweight){
+      renderExerciseBox('gym-exercise-img','gym-exercise-status', iv);
+    } else {
+      document.getElementById('gym-p1').innerHTML=`${iv.p1}<span class="gym-p-unit">${m.u1}</span>`;
+      document.getElementById('gym-p2').innerHTML=`${iv.p2}<span class="gym-p-unit">${m.u2}</span>`;
+      document.getElementById('gym-p1-lbl').textContent=m.p1lbl;
+      document.getElementById('gym-p2-lbl').textContent=m.p2lbl;
+    }
     document.getElementById('gym-next').textContent = next
-      ? `Sigue: ${next.name} · ${m.badge1(next.p1)} · ${m.badge2(next.p2)}`
+      ? (m.bodyweight ? `Sigue: ${next.name}` : `Sigue: ${next.name} · ${m.badge1(next.p1)} · ${m.badge2(next.p2)}`)
       : 'Último bloque 💪';
     const fill=document.getElementById('gym-bar-fill');
     fill.style.width=(elapsed/TOTAL_SECONDS*100)+'%';
@@ -932,6 +955,9 @@ function updateUI(){
 function buildCalib(){
   const m=MACHINES[machineKey], box=document.getElementById('calib-box');
   if(!box) return;
+  const group=box.closest('.set-group');
+  if(m.bodyweight){ box.innerHTML=''; if(group) group.style.display='none'; return; }
+  if(group) group.style.display='';
   box.innerHTML='';
   [['max1','p1lbl','u1'],['max2','p2lbl','u2']].forEach(([mk,lk,uk])=>{
     const row=document.createElement('div');
@@ -951,11 +977,17 @@ function setMax(key,v){
   buildPlan(); rebuildTimeline(); resetTimer();
 }
 
+function updateAdjustVisibility(){
+  const show = adjustOn && !MACHINES[machineKey].bodyweight;
+  document.getElementById('adjust-row').style.display = show?'flex':'none';
+  document.getElementById('propagate-row').style.display = show?'flex':'none';
+}
 function refreshHeader(){
   const L=LEVELS[levelKey], m=MACHINES[machineKey];
   document.getElementById('topbar-title').textContent=`${m.icon} ${m.label} · ${L.label} · ${durKey}′`;
   document.getElementById('plan-title').textContent=`Programa · ${TOTAL_SPRINTS} sprints`;
   buildCalib();
+  updateAdjustVisibility();
 }
 
 /* ---------- configuración ---------- */
@@ -995,8 +1027,7 @@ function togglePreWarn(){ preWarn=!preWarn;
   if(!preWarn) hidePreWarn(); }
 function toggleAdjust(){ adjustOn=!adjustOn;
   document.getElementById('adjust-toggle-row').classList.toggle('on',adjustOn);
-  document.getElementById('adjust-row').style.display=adjustOn?'flex':'none';
-  document.getElementById('propagate-row').style.display=adjustOn?'flex':'none'; }
+  updateAdjustVisibility(); }
 function togglePropagate(){ propagate=!propagate;
   document.getElementById('propagate-row').classList.toggle('on',propagate); }
 function toggleGymEnabled(){ gymEnabled=!gymEnabled;
@@ -1072,8 +1103,7 @@ function syncToggleUI(){
   [['bgmode-row',bgMode],['sound-row',soundOn],['prewarn-row',preWarn],
    ['adjust-toggle-row',adjustOn],['propagate-row',propagate],['gym-toggle-row',gymEnabled]]
     .forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.classList.toggle('on',v); });
-  document.getElementById('adjust-row').style.display=adjustOn?'flex':'none';
-  document.getElementById('propagate-row').style.display=adjustOn?'flex':'none';
+  updateAdjustVisibility();
   document.getElementById('gym-btn').style.display=gymEnabled?'':'none';
 }
 
