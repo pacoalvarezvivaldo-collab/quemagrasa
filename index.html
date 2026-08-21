@@ -47,13 +47,21 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 
 .section-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em;
   margin:22px 0 10px; }
+
+.flame { cursor:pointer; display:inline-block; -webkit-tap-highlight-color:transparent; }
+.egg-overlay { position:fixed; inset:0; background:#0d0d0f; display:flex; align-items:center; justify-content:center;
+  z-index:300; opacity:0; pointer-events:none; transition:opacity .3s; padding:30px; text-align:center; }
+.egg-overlay.show { opacity:1; pointer-events:all; }
+.egg-big { font-size:32px; font-weight:800; color:var(--accent); line-height:1.4; }
+.egg-small { font-size:15px; color:var(--muted); margin-top:10px; line-height:1.5; }
+.rainbow-zone { position:fixed; top:0; height:16px; width:16.6667vw; z-index:400; }
 </style>
 </head>
 <body>
 
 <div class="wrap">
   <div class="hero">
-    <div class="hero-title">🔥 Quemagrasa</div>
+    <div class="hero-title"><span class="flame" id="flame">🔥</span> Quemagrasa</div>
     <div class="hero-sub">Elige cómo quieres entrenar hoy</div>
   </div>
 
@@ -92,5 +100,84 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   </div>
 </div>
 
+<div class="egg-overlay" id="egg-overlay">
+  <div>
+    <div class="egg-big" id="egg-big"></div>
+    <div class="egg-small" id="egg-small"></div>
+  </div>
+</div>
+
+<div class="rainbow-zone" data-z="0" style="left:0"></div>
+<div class="rainbow-zone" data-z="1" style="left:16.6667vw"></div>
+<div class="rainbow-zone" data-z="2" style="left:33.3333vw"></div>
+<div class="rainbow-zone" data-z="3" style="left:50vw"></div>
+<div class="rainbow-zone" data-z="4" style="left:66.6667vw"></div>
+<div class="rainbow-zone" data-z="5" style="left:83.3333vw"></div>
+
+<script>
+/* easter egg: 7 taps al 🔥 en menos de 3s */
+let flameTaps = 0, flameTimer = null;
+document.getElementById('flame').addEventListener('click', ()=>{
+  flameTaps++;
+  clearTimeout(flameTimer);
+  flameTimer = setTimeout(()=>{ flameTaps = 0; }, 3000);
+  if(flameTaps>=7){
+    flameTaps = 0;
+    clearTimeout(flameTimer);
+    const el = document.getElementById('egg-overlay');
+    document.getElementById('egg-big').textContent = '🔥 MODO BESTIA ACTIVADO';
+    document.getElementById('egg-small').textContent = '';
+    el.classList.add('show');
+    setTimeout(()=>{
+      document.getElementById('egg-small').textContent = 'Ya deja de tocar la pantalla y ve a entrenar 😤';
+    }, 1200);
+    setTimeout(()=>{ el.classList.remove('show'); }, 3800);
+  }
+});
+
+/* easter egg oculto: tocar las 6 zonas invisibles en orden (izquierda a derecha) alterna "modo arcoíris" */
+const KEY_RAINBOW = 'qg_rainbow';
+let rainbowExpected = 0, rainbowResetTimer = null, rainbowInterval = null, rainbowHue = 0;
+
+function applyRainbowHue(){
+  document.documentElement.style.setProperty('--accent', `hsl(${rainbowHue}, 85%, 55%)`);
+  rainbowHue = (rainbowHue + 6) % 360;
+}
+function startRainbow(){
+  clearInterval(rainbowInterval);
+  applyRainbowHue();
+  rainbowInterval = setInterval(applyRainbowHue, 150);
+}
+function stopRainbow(){
+  clearInterval(rainbowInterval);
+  rainbowInterval = null;
+  document.documentElement.style.removeProperty('--accent');
+}
+function toggleRainbow(){
+  if(rainbowInterval){ stopRainbow(); try{ localStorage.removeItem(KEY_RAINBOW); }catch(e){} }
+  else{ startRainbow(); try{ localStorage.setItem(KEY_RAINBOW,'1'); }catch(e){} }
+}
+
+document.querySelectorAll('.rainbow-zone').forEach(zone=>{
+  zone.addEventListener('click', ()=>{
+    const z = parseInt(zone.dataset.z, 10);
+    clearTimeout(rainbowResetTimer);
+    if(z === rainbowExpected){
+      rainbowExpected++;
+      if(rainbowExpected >= 6){
+        rainbowExpected = 0;
+        toggleRainbow();
+        return;
+      }
+      rainbowResetTimer = setTimeout(()=>{ rainbowExpected = 0; }, 4000);
+    } else {
+      rainbowExpected = (z===0) ? 1 : 0;
+      if(rainbowExpected) rainbowResetTimer = setTimeout(()=>{ rainbowExpected = 0; }, 4000);
+    }
+  });
+});
+
+try{ if(localStorage.getItem(KEY_RAINBOW)==='1') startRainbow(); }catch(e){}
+</script>
 </body>
 </html>
