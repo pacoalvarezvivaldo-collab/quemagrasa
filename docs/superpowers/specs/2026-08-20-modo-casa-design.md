@@ -28,7 +28,7 @@ No se abre nada más (scripts externos, frames, forms siguen bloqueados).
 ## Motor del timer
 Sin cambios: mismas duraciones (15/30/40 min), mismos niveles (fácil/medio/difícil/espartano), misma estructura de bloques (warm → ciclos mod/int/rec → cool).
 
-Lo que cambia por bloque en modo Casa: en vez de `p1`/`p2` numéricos de máquina, cada bloque lleva un ejercicio elegido de la lista `bodyweight` filtrada por tipo de bloque (json trae `bodyPart`/`category` — se mapea heurísticamente: `category:cardio` o `bodyPart:cardio` → bloques moderados/intensos, `category:stretching` → bloques de recuperación/calentamiento/enfriamiento). Se rota sin repetir hasta agotar la lista disponible por tipo.
+Lo que cambia por bloque en modo Casa: en vez de `p1`/`p2` numéricos de máquina, cada bloque lleva un ejercicio elegido de la lista `bodyweight` filtrada por tipo de bloque y por nivel (`category:stretching` → calentamiento/recuperación/enfriamiento, `category:cardio` → bloques moderados, `category:intense` → **según nivel**: `cardio` de bajo impacto en Fácil/Medio, `plyometrics` explosivo en Difícil/Espartano). Esto hace que el mismo circuito funcione tanto para alguien con sobrepeso empezando en Fácil como para alguien ya en forma en Espartano, usando el selector de nivel que ya existe — sin UI nueva. Se rota sin repetir hasta agotar la lista disponible por tipo.
 
 ## UI en modo Casa
 - Tarjeta actual (`current-card`) y modo gimnasio: muestran GIF + nombre del ejercicio en vez de los 2 `param-box` numéricos.
