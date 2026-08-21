@@ -370,7 +370,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 
     <div class="set-group">
       <div class="set-label">Equipo</div>
-      <div class="grid-3" id="machine-grid"></div>
+      <div class="grid-4" id="machine-grid"></div>
     </div>
 
     <div class="set-group">
@@ -459,7 +459,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 <script>
 /* =====================================================================
    QUEMAGRASA v3
-   - 4 niveles · 3 duraciones · 3 máquinas · 12 colores
+   - 4 niveles · 3 duraciones · 4 máquinas · 12 colores
    - Motor de tiempo con reloj real (exacto en segundo plano)
    - Pre-aviso 10 s antes del sprint
    - Ajuste ± en vivo (con o sin propagación)
@@ -512,7 +512,7 @@ const MACHINES = {
   },
   casa: {
     label:"Casa", icon:"🏠", bodyweight:true,
-    aeroName:"", sprintName:"",
+    aeroName:"Bloque aeróbico", sprintName:"⚡ Bloque intenso",
     p1lbl:"", u1:"", min1:0, max1:0, dec1:0, badge1:()=>'',
     p2lbl:"", u2:"", min2:0, max2:0, dec2:0, badge2:()=>'',
     frac:{ easy:[0,0], moderate:[0,0], intense:[0,0], recovery:[0,0] },
@@ -592,7 +592,6 @@ function assignCasaExercises(intervals, levelKey){
     if(nextIdx[cat]===undefined) nextIdx[cat]=Math.floor(Math.random()*pool.length);
     iv.exercise=pool[nextIdx[cat]%pool.length];
     nextIdx[cat]++;
-    iv.name=iv.exercise.name;
   });
 }
 
@@ -870,11 +869,11 @@ function closeGym(){ gymOpen=false; document.getElementById('gym-overlay').class
 /* ---------- UI ---------- */
 function renderExerciseBox(imgId, statusId, iv){
   const img=document.getElementById(imgId), status=document.getElementById(statusId);
-  if(CASA_STATE.status==='loading'){ img.removeAttribute('src'); img.style.display='none'; status.textContent='Cargando ejercicios…'; return; }
+  if(CASA_STATE.status==='loading'||CASA_STATE.status==='idle'){ img.removeAttribute('src'); img.style.display='none'; status.textContent='Cargando ejercicios…'; return; }
   if(CASA_STATE.status==='error'){ img.removeAttribute('src'); img.style.display='none'; status.textContent='No se pudo cargar (revisa tu internet).'; return; }
   if(!iv.exercise){ img.removeAttribute('src'); img.style.display='none'; status.textContent='Sin ejercicios disponibles.'; return; }
   img.src=iv.exercise.gifUrl; img.alt=iv.exercise.name; img.style.display='';
-  status.textContent='';
+  status.textContent=iv.exercise.name;
 }
 function updateUI(){
   const m=MACHINES[machineKey], iv=INTERVALS[currentIdx], next=INTERVALS[currentIdx+1];
@@ -998,7 +997,7 @@ async function selectMachine(k){
   machineKey=k; syncButtons(); rebuildAll();
   if(MACHINES[k].bodyweight){
     await ensureCasaExercises();
-    if(machineKey===k) rebuildAll();
+    if(machineKey===k && !running) rebuildAll();
   }
 }
 function syncButtons(){
@@ -1140,7 +1139,7 @@ async function loadSettings(){
   buildPlan(); rebuildTimeline(); refreshHeader(); resetTimer();
   if(MACHINES[machineKey].bodyweight){
     await ensureCasaExercises();
-    buildPlan(); rebuildTimeline(); refreshHeader(); resetTimer();
+    if(!running){ buildPlan(); rebuildTimeline(); refreshHeader(); resetTimer(); }
   }
 }
 
