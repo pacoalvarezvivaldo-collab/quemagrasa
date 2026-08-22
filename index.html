@@ -55,6 +55,45 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   opacity:.45; transform:translate(-50%,-50%) scale(0); pointer-events:none; z-index:250;
   animation:tap-ripple-anim .55s ease-out forwards; }
 @keyframes tap-ripple-anim { to { transform:translate(-50%,-50%) scale(16); opacity:0; } }
+
+/* ---- Tu progreso ---- */
+.progress-card.open { border-radius:14px 14px 0 0; border-color:var(--accent); }
+#progress-chevron { transition:transform .15s; }
+.progress-card.open #progress-chevron { transform:rotate(90deg); }
+
+.progress-panel { display:none; background:var(--surface); border:1.5px solid var(--border); border-top:none;
+  border-radius:0 0 14px 14px; padding:14px 16px 16px; margin-top:-8px; margin-bottom:8px; }
+.progress-panel.show { display:block; }
+
+.field-label { font-size:12.5px; font-weight:700; display:block; margin-bottom:6px; }
+.field-input { background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  border-radius:10px; padding:9px 10px; font-family:'Space Mono',monospace; font-size:14px;
+  width:100%; -webkit-appearance:none; margin-bottom:12px; }
+.progress-btn { width:100%; background:var(--accent); color:var(--accent-text); border:none;
+  border-radius:12px; padding:12px; font-weight:700; font-family:'Syne',sans-serif; font-size:13px;
+  cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.progress-btn-secondary { width:100%; background:var(--surface2); color:var(--text); border:1px solid var(--border);
+  border-radius:12px; padding:12px; font-weight:700; font-family:'Syne',sans-serif; font-size:13px;
+  cursor:pointer; -webkit-tap-highlight-color:transparent; margin-top:8px; }
+
+.progress-today-row { display:flex; gap:8px; align-items:flex-start; }
+.progress-today-row .field-input { margin-bottom:12px; }
+.progress-today-row .progress-btn { width:auto; padding:9px 16px; white-space:nowrap; }
+
+.progress-goal-link { font-size:12px; color:var(--muted); margin-bottom:12px; cursor:pointer;
+  -webkit-tap-highlight-color:transparent; }
+.progress-goal-form { background:var(--surface2); border:1px solid var(--border); border-radius:12px;
+  padding:12px; margin-bottom:14px; }
+
+.progress-summary { font-size:13px; line-height:1.6; margin-bottom:14px; }
+.progress-summary .status-line { color:var(--muted); font-size:12px; margin-top:2px; }
+
+.progress-chart-wrap { margin-bottom:14px; }
+.progress-chart-wrap svg { width:100%; height:auto; display:block; }
+
+.progress-bmi { display:none; align-items:center; gap:8px; font-family:'Space Mono',monospace;
+  font-size:13px; background:var(--surface2); border-radius:10px; padding:9px 12px; }
+.progress-bmi .bmi-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -66,6 +105,38 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   </div>
 
   <div class="mode-list">
+    <div class="mode-row progress-card" id="progress-card" onclick="toggleProgressPanel()">
+      <span class="mode-icon">📊</span>
+      <span class="mode-text"><span class="mode-name">Tu progreso</span><span class="mode-sub" id="progress-sub">Registra tu peso</span></span>
+      <span class="mode-chevron" id="progress-chevron">›</span>
+    </div>
+    <div class="progress-panel" id="progress-panel">
+      <div id="progress-first-form">
+        <label class="field-label">Peso (kg)</label>
+        <input class="field-input" id="progress-first-weight" type="number" inputmode="decimal" min="30" max="300" step="0.1" placeholder="70.0">
+        <label class="field-label">Estatura (cm)</label>
+        <input class="field-input" id="progress-first-height" type="number" inputmode="numeric" min="100" max="250" placeholder="170">
+        <button class="progress-btn" onclick="saveFirstEntry()">Guardar</button>
+      </div>
+      <div id="progress-data" style="display:none;">
+        <div class="progress-today-row">
+          <input class="field-input" id="progress-today-weight" type="number" inputmode="decimal" min="30" max="300" step="0.1">
+          <button class="progress-btn" onclick="saveTodayEntry()">Guardar</button>
+        </div>
+        <div class="progress-goal-link" id="progress-goal-link" onclick="toggleGoalForm()"></div>
+        <div class="progress-goal-form" id="progress-goal-form" style="display:none;">
+          <label class="field-label">Peso meta (kg)</label>
+          <input class="field-input" id="progress-goal-weight" type="number" inputmode="decimal" min="30" max="300" step="0.1">
+          <label class="field-label">Fecha meta</label>
+          <input class="field-input" id="progress-goal-date" type="date">
+          <button class="progress-btn" onclick="saveGoalEntry()">Guardar meta</button>
+          <button class="progress-btn-secondary" id="progress-goal-remove" onclick="removeGoalEntry()" style="display:none;">Quitar meta</button>
+        </div>
+        <div class="progress-summary" id="progress-summary"></div>
+        <div class="progress-chart-wrap" id="progress-chart-wrap"></div>
+        <div class="progress-bmi" id="progress-bmi"></div>
+      </div>
+    </div>
     <a class="mode-row" href="entrenamientos.html">
       <span class="mode-icon">🏠</span>
       <span class="mode-text"><span class="mode-name">Casa</span><span class="mode-sub">Plan de 30 días</span></span>
@@ -118,7 +189,61 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <div class="rainbow-zone" data-z="4" style="left:66.6667vw"></div>
 <div class="rainbow-zone" data-z="5" style="left:83.3333vw"></div>
 
+<script src="weight-log.js"></script>
 <script>
+/* ---------- Tu progreso: peso, estatura, meta, IMC ---------- */
+let progressOpen = false;
+
+function toggleProgressPanel(){
+  progressOpen = !progressOpen;
+  document.getElementById('progress-card').classList.toggle('open', progressOpen);
+  document.getElementById('progress-panel').classList.toggle('show', progressOpen);
+}
+
+function saveFirstEntry(){
+  const w = parseFloat(document.getElementById('progress-first-weight').value);
+  const h = parseFloat(document.getElementById('progress-first-height').value);
+  if(isNaN(w) || w<30 || w>300 || isNaN(h) || h<100 || h>250){
+    alert('Ingresa un peso (30-300 kg) y estatura (100-250 cm) válidos.');
+    return;
+  }
+  WeightLog.saveTodayWeight(w);
+  WeightLog.saveHeightCm(h);
+  renderProgress();
+}
+
+function saveTodayEntry(){
+  const w = parseFloat(document.getElementById('progress-today-weight').value);
+  if(isNaN(w) || w<30 || w>300){
+    alert('Ingresa un peso válido (30-300 kg).');
+    return;
+  }
+  WeightLog.saveTodayWeight(w);
+  renderProgress();
+}
+
+function renderProgress(){
+  const log = WeightLog.getLog();
+  const sub = document.getElementById('progress-sub');
+  const firstForm = document.getElementById('progress-first-form');
+  const data = document.getElementById('progress-data');
+
+  if(!log.length){
+    sub.textContent = 'Registra tu peso';
+    firstForm.style.display = '';
+    data.style.display = 'none';
+    return;
+  }
+
+  firstForm.style.display = 'none';
+  data.style.display = '';
+  const last = log[log.length-1];
+  sub.textContent = `Último registro: ${last.weightKg} kg`;
+  document.getElementById('progress-today-weight').value = last.weightKg;
+}
+
+renderProgress();
+
 /* easter egg: 7 taps al 🔥 en menos de 3s */
 let flameTaps = 0, flameTimer = null;
 document.getElementById('flame').addEventListener('click', ()=>{
