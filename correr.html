@@ -119,7 +119,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <div class="topbar">
   <a class="gear-btn" href="index.html" title="Volver al inicio">←</a>
   <span class="topbar-title">🏃 Correr / Caminar</span>
-  <span style="width:34px"></span>
+  <button class="gear-btn" id="sync-btn" style="display:none" title="Sincronizar entre dispositivos">☁️</button>
 </div>
 
 <div class="screen show" id="setup-screen">
@@ -199,6 +199,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="sync.js"></script>
 <script>
 /* =====================================================================
    CORRER / CAMINAR — rastreo GPS, mapa Leaflet+OSM, pasos estimados
@@ -235,7 +236,11 @@ function saveHistoryEntry(entry){
 }
 function saveWeight(v){
   const n = parseFloat(v);
-  if(!isNaN(n) && n>=30 && n<=250){ userWeight = n; try{ localStorage.setItem(KEY_WEIGHT, String(n)); }catch(e){} }
+  if(!isNaN(n) && n>=30 && n<=250){
+    userWeight = n;
+    try{ localStorage.setItem(KEY_WEIGHT, String(n)); }catch(e){}
+    if(window.QuemaSync) QuemaSync.pushUserState({ weight_kg: n });
+  }
 }
 function loadWeight(){ try{ const v=parseFloat(localStorage.getItem(KEY_WEIGHT)); return (v>=30 && v<=250)?v:70; }catch(e){ return 70; } }
 function saveModePref(){ try{ localStorage.setItem(KEY_MODE, mode); }catch(e){} }
@@ -455,7 +460,9 @@ function stopTracking(){
   const steps = stepsFor(distanceM);
   const kcal = kcalFor(elapsedS);
   lastResult = { mode, distanceM, elapsedS, steps, kcal };
-  saveHistoryEntry({ date: Date.now(), mode, distanceM, elapsedS, steps, kcal });
+  const entry = { date: Date.now(), mode, distanceM, elapsedS, steps, kcal };
+  saveHistoryEntry(entry);
+  if(window.QuemaSync) QuemaSync.pushRun(entry);
 
   document.getElementById('sum-dist').textContent = (distanceM/1000).toFixed(2) + ' km';
   document.getElementById('sum-time').textContent = fmtTime(elapsedS);
@@ -526,12 +533,27 @@ function renderHistory(){
 }
 
 /* ---------- init ---------- */
-(function init(){
+(async function init(){
   userWeight = loadWeight();
   document.getElementById('weight-input').value = userWeight;
   const savedMode = loadModePref();
   if(savedMode==='caminar') setMode('caminar');
   renderHistory();
+
+  if(!window.QuemaSync) return;
+  await QuemaSync.init(document.getElementById('sync-btn'));
+  if(!QuemaSync.isSignedIn()) return;
+
+  const merged = await QuemaSync.pullAndMergeHistory(loadHistory());
+  try{ localStorage.setItem(KEY_HISTORY, JSON.stringify(merged.slice(-50))); }catch(e){}
+  renderHistory();
+
+  const remote = await QuemaSync.pullUserState();
+  if(remote && remote.weightKg != null){
+    userWeight = remote.weightKg;
+    try{ localStorage.setItem(KEY_WEIGHT, String(remote.weightKg)); }catch(e){}
+    document.getElementById('weight-input').value = remote.weightKg;
+  }
 })();
 </script>
 </body>
