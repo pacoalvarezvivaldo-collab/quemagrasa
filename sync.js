@@ -42,6 +42,7 @@ async function getClient(){
 
 function renderBtn(){
   if(!syncBtn) return;
+  syncBtn.style.display = ''; // credenciales configuradas y cliente listo: el botón deja de estar oculto
   syncBtn.textContent = session ? '☁️✓' : '☁️';
   syncBtn.title = session ? `Sesión: ${session.user.email} (toca para salir)` : 'Sincronizar entre dispositivos';
 }
