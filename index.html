@@ -242,6 +242,45 @@ function renderProgress(){
   document.getElementById('progress-today-weight').value = last.weightKg;
 
   renderSummary(log);
+  renderGoalLink();
+}
+
+function renderGoalLink(){
+  const link = document.getElementById('progress-goal-link');
+  const goal = WeightLog.getGoal();
+  const removeBtn = document.getElementById('progress-goal-remove');
+  if(goal){
+    link.textContent = `🎯 ${goal.weightKg}kg para ${fmtDate(goal.date)} · editar`;
+    document.getElementById('progress-goal-weight').value = goal.weightKg;
+    document.getElementById('progress-goal-date').value = goal.date;
+    removeBtn.style.display = '';
+  } else {
+    link.textContent = '🎯 poner meta';
+    removeBtn.style.display = 'none';
+  }
+}
+
+function toggleGoalForm(){
+  const form = document.getElementById('progress-goal-form');
+  form.style.display = form.style.display === 'none' ? '' : 'none';
+}
+
+function saveGoalEntry(){
+  const w = parseFloat(document.getElementById('progress-goal-weight').value);
+  const d = document.getElementById('progress-goal-date').value;
+  if(isNaN(w) || w<30 || w>300 || !d){
+    alert('Ingresa un peso meta (30-300 kg) y una fecha válidos.');
+    return;
+  }
+  WeightLog.saveGoal(w, d);
+  document.getElementById('progress-goal-form').style.display = 'none';
+  renderProgress();
+}
+
+function removeGoalEntry(){
+  WeightLog.clearGoal();
+  document.getElementById('progress-goal-form').style.display = 'none';
+  renderProgress();
 }
 
 function fmtDate(dateStr){
