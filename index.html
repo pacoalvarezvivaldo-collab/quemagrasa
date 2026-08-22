@@ -123,6 +123,12 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
           <input class="field-input" id="progress-today-weight" type="number" inputmode="decimal" min="30" max="300" step="0.1">
           <button class="progress-btn" onclick="saveTodayEntry()">Guardar</button>
         </div>
+        <div class="progress-goal-link" id="progress-height-link" onclick="toggleHeightForm()"></div>
+        <div class="progress-goal-form" id="progress-height-form" style="display:none;">
+          <label class="field-label">Estatura (cm)</label>
+          <input class="field-input" id="progress-height-input" type="number" inputmode="numeric" min="100" max="250">
+          <button class="progress-btn" onclick="saveHeightEntry()">Guardar</button>
+        </div>
         <div class="progress-goal-link" id="progress-goal-link" onclick="toggleGoalForm()"></div>
         <div class="progress-goal-form" id="progress-goal-form" style="display:none;">
           <label class="field-label">Peso meta (kg)</label>
@@ -242,9 +248,33 @@ function renderProgress(){
   document.getElementById('progress-today-weight').value = last.weightKg;
 
   renderSummary(log);
+  renderHeightLink();
   renderGoalLink();
   renderChart(log);
   renderBmi(last.weightKg);
+}
+
+function renderHeightLink(){
+  const link = document.getElementById('progress-height-link');
+  const h = WeightLog.getHeightCm();
+  link.textContent = h ? `📏 ${h} cm · editar` : '📏 agregar estatura';
+  if(h) document.getElementById('progress-height-input').value = h;
+}
+
+function toggleHeightForm(){
+  const form = document.getElementById('progress-height-form');
+  form.style.display = form.style.display === 'none' ? '' : 'none';
+}
+
+function saveHeightEntry(){
+  const h = parseFloat(document.getElementById('progress-height-input').value);
+  if(isNaN(h) || h<100 || h>250){
+    alert('Ingresa una estatura válida (100-250 cm).');
+    return;
+  }
+  WeightLog.saveHeightCm(h);
+  document.getElementById('progress-height-form').style.display = 'none';
+  renderProgress();
 }
 
 function renderBmi(weightKg){
@@ -312,14 +342,15 @@ function renderGoalLink(){
 
 function toggleGoalForm(){
   const form = document.getElementById('progress-goal-form');
+  document.getElementById('progress-goal-date').min = WeightLog.todayStr();
   form.style.display = form.style.display === 'none' ? '' : 'none';
 }
 
 function saveGoalEntry(){
   const w = parseFloat(document.getElementById('progress-goal-weight').value);
   const d = document.getElementById('progress-goal-date').value;
-  if(isNaN(w) || w<30 || w>300 || !d){
-    alert('Ingresa un peso meta (30-300 kg) y una fecha válidos.');
+  if(isNaN(w) || w<30 || w>300 || !d || d <= WeightLog.todayStr()){
+    alert('Ingresa un peso meta (30-300 kg) y una fecha futura válidos.');
     return;
   }
   WeightLog.saveGoal(w, d);
@@ -365,7 +396,7 @@ function renderSummary(log){
   el.innerHTML = html;
 }
 
-renderProgress();
+try{ renderProgress(); }catch(e){}
 
 /* easter egg: 7 taps al 🔥 en menos de 3s */
 let flameTaps = 0, flameTimer = null;
@@ -433,7 +464,7 @@ try{ if(localStorage.getItem(KEY_RAINBOW)==='1') startRainbow(); }catch(e){}
 
 /* toque en zona vacía (fuera de botones/links/zonas ocultas): ripple ambient, sin acción */
 document.addEventListener('click', e=>{
-  if(e.target.closest('a, button, .rainbow-zone')) return;
+  if(e.target.closest('a, button, input, .progress-card, .progress-goal-link, .rainbow-zone')) return;
   const r = document.createElement('div');
   r.className = 'tap-ripple';
   r.style.left = e.clientX + 'px';
@@ -441,6 +472,8 @@ document.addEventListener('click', e=>{
   document.body.appendChild(r);
   r.addEventListener('animationend', ()=>r.remove());
 });
+
+window.addEventListener('pageshow', e=>{ if(e.persisted) try{ renderProgress(); }catch(err){} });
 </script>
 </body>
 </html>

@@ -138,7 +138,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
     <div class="field-row">
       <span class="field-label">Tu peso (para kcal)</span>
       <div>
-        <input class="field-input" id="weight-input" type="number" inputmode="numeric" min="30" max="250" value="70" oninput="saveWeight(this.value)">
+        <input class="field-input" id="weight-input" type="number" inputmode="numeric" min="30" max="300" value="70" oninput="saveWeight(this.value)">
         <span style="font-size:12px;color:var(--muted)">kg</span>
       </div>
     </div>
@@ -237,13 +237,13 @@ function saveHistoryEntry(entry){
 }
 function saveWeight(v){
   const n = parseFloat(v);
-  if(!isNaN(n) && n>=30 && n<=250){
+  if(!isNaN(n) && n>=30 && n<=300){
     userWeight = n;
-    WeightLog.saveTodayWeight(n);
+    if(window.WeightLog) WeightLog.saveTodayWeight(n);
     if(window.QuemaSync) QuemaSync.pushUserState({ weight_kg: n });
   }
 }
-function loadWeight(){ const v = WeightLog.getLatestWeight(); return (v>=30 && v<=250)?v:70; }
+function loadWeight(){ const v = window.WeightLog ? WeightLog.getLatestWeight() : null; return (v>=30 && v<=300)?v:70; }
 function saveModePref(){ try{ localStorage.setItem(KEY_MODE, mode); }catch(e){} }
 function loadModePref(){ try{ return localStorage.getItem(KEY_MODE); }catch(e){ return null; } }
 

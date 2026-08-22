@@ -98,6 +98,18 @@ function saveGoal(weightKg, dateStr){
 }
 function clearGoal(){ try{ localStorage.removeItem(KEY_GOAL_W); localStorage.removeItem(KEY_GOAL_D); }catch(e){} }
 
+/* migración de una sola vez: si ya existía un peso en el campo viejo de correr.html
+   (correr_weight, previo a esta feature) y todavía no hay bitácora, se usa como primer
+   registro en vez de perderlo silenciosamente. */
+(function migrateOldCorrerWeight(){
+  try{
+    if(!localStorage.getItem(KEY_LOG)){
+      const old = parseFloat(localStorage.getItem('correr_weight'));
+      if(old>=30 && old<=300) saveLog(upsertEntry([], todayStr(), old));
+    }
+  }catch(e){}
+})();
+
 window.WeightLog = {
   todayStr, upsertEntry, latestEntry, bmiValue, bmiBand, daysBetween, theoreticalWeightAt,
   weightChangeSummary, progressStatus,
