@@ -51,6 +51,10 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 .egg-small { font-size:15px; color:var(--muted); margin-top:10px; line-height:1.5; }
 .rainbow-zone { position:fixed; top:0; height:16px; width:16.6667vw; z-index:400; }
 
+.mode-row.fallen { position:fixed; cursor:grab; z-index:500; touch-action:none;
+  transition:top .7s cubic-bezier(.34,1.4,.64,1), left .7s cubic-bezier(.34,1.4,.64,1), transform .7s cubic-bezier(.34,1.4,.64,1); }
+.mode-row.fallen.dragging { cursor:grabbing; transition:none; }
+
 .tap-ripple { position:fixed; width:14px; height:14px; border-radius:50%; background:var(--accent);
   opacity:.45; transform:translate(-50%,-50%) scale(0); pointer-events:none; z-index:250;
   animation:tap-ripple-anim .55s ease-out forwards; }
@@ -471,9 +475,80 @@ document.addEventListener('click', e=>{
   r.style.top = e.clientY + 'px';
   document.body.appendChild(r);
   r.addEventListener('animationend', ()=>r.remove());
+  registerEmptyTap();
 });
 
 window.addEventListener('pageshow', e=>{ if(e.persisted) try{ renderProgress(); }catch(err){} });
+
+/* easter egg oculto: 60 taps seguidos en zona vacía → los botones "caen" y se pueden arrastrar */
+let emptyTapCount = 0, emptyTapResetTimer = null;
+const EMPTY_TAP_GOAL = 60;
+
+function registerEmptyTap(){
+  emptyTapCount++;
+  clearTimeout(emptyTapResetTimer);
+  emptyTapResetTimer = setTimeout(()=>{ emptyTapCount = 0; }, 2000);
+  if(emptyTapCount >= EMPTY_TAP_GOAL){
+    emptyTapCount = 0;
+    clearTimeout(emptyTapResetTimer);
+    dropButtons();
+  }
+}
+
+function dropButtons(){
+  document.querySelectorAll('.mode-row').forEach(row=>{
+    if(row.classList.contains('fallen')) return;
+    const r = row.getBoundingClientRect();
+    row.style.position = 'fixed';
+    row.style.left = r.left+'px';
+    row.style.top = r.top+'px';
+    row.style.width = r.width+'px';
+    row.style.height = r.height+'px';
+    row.style.margin = '0';
+    row.classList.add('fallen');
+    requestAnimationFrame(()=>{
+      const maxLeft = Math.max(10, window.innerWidth - r.width - 10);
+      const maxTop = Math.max(10, window.innerHeight - r.height - 10);
+      row.style.left = (10 + Math.random()*(maxLeft-10)) + 'px';
+      row.style.top = (10 + Math.random()*(maxTop-10)) + 'px';
+      row.style.transform = `rotate(${(Math.random()*50-25).toFixed(1)}deg)`;
+    });
+    makeDraggable(row);
+  });
+}
+
+function makeDraggable(row){
+  let dragging = false, moved = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
+  row.addEventListener('pointerdown', e=>{
+    dragging = true; moved = false;
+    row.setPointerCapture(e.pointerId);
+    row.classList.add('dragging');
+    startX = e.clientX; startY = e.clientY;
+    startLeft = parseFloat(row.style.left)||0;
+    startTop = parseFloat(row.style.top)||0;
+  });
+  row.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    if(Math.abs(dx)>4 || Math.abs(dy)>4) moved = true;
+    row.style.left = (startLeft+dx)+'px';
+    row.style.top = (startTop+dy)+'px';
+  });
+  row.addEventListener('pointerup', ()=>{
+    dragging = false;
+    row.classList.remove('dragging');
+    if(moved) row.dataset.justDragged = '1';
+  });
+}
+
+document.addEventListener('click', e=>{
+  const fallen = e.target.closest('.fallen');
+  if(fallen && fallen.dataset.justDragged){
+    delete fallen.dataset.justDragged;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }
+}, true);
 </script>
 </body>
 </html>
