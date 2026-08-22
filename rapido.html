@@ -124,7 +124,7 @@ const COUNT = 8, WORK_SECONDS = 45, REST_SECONDS = 30;
 /* Filtra ejercicios que piden equipo poco común en casa (pelotas/fitball/bosu, barras/barras
    paralelas, dominadas/muscle-ups/colgado que necesitan barra aunque el slug no diga "bar").
    Los de banco se dejan pero se marcan para sugerir una silla en su lugar. */
-const NO_EQUIPMENT_RE = /ball|balon|balón|pelota|medicine|swiss|estabilidad|barbell|ez-bar|\bbars?\b|barra|pull-up|pullup|chin-up|chinup|muscle-up|muscleup|hanging|colgad|dominad|dip-cage|jaula de dominadas/i;
+const NO_EQUIPMENT_RE = /ball|balon|balón|pelota|medicine|swiss|estabilidad|barbell|ez-bar|\bbars?\b|barra|pull-up|pullup|chin-up|chinup|muscle-up|muscleup|hanging|colgad|dominad|dip-cage|jaula de dominadas|captains-chair|silla del capitan|silla del capitán|ring-dips|anillas/i;
 const CHAIR_TIP_RE = /bench|banco/i;
 
 let poolStatus = 'idle', poolPromise = null, ALL_EXERCISES = [];
