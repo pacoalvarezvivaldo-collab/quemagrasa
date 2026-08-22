@@ -251,9 +251,10 @@ document.body.addEventListener('click', initAudio, {once:true});
 
 /* ---------- datos ---------- */
 /* Filtra ejercicios que piden equipo poco común en casa (pelotas/fitball/bosu, barras/barras
-   paralelas) — no toda la gente lo tiene. Los de banco se dejan pero se marcan para sugerir
-   una silla en su lugar. Basado en los slugs/nombres reales del catálogo, no en suposiciones. */
-const NO_EQUIPMENT_RE = /ball|balon|balón|pelota|medicine|swiss|estabilidad|barbell|ez-bar|\bbars?\b|barra/i;
+   paralelas, dominadas/muscle-ups/colgado que necesitan barra aunque el slug no diga "bar") —
+   no toda la gente lo tiene. Los de banco se dejan pero se marcan para sugerir una silla en su
+   lugar. Basado en los slugs/nombres reales del catálogo, no en suposiciones. */
+const NO_EQUIPMENT_RE = /ball|balon|balón|pelota|medicine|swiss|estabilidad|barbell|ez-bar|\bbars?\b|barra|pull-up|pullup|chin-up|chinup|muscle-up|muscleup|hanging|colgad|dominad|dip-cage|jaula de dominadas/i;
 const CHAIR_TIP_RE = /bench|banco/i;
 
 async function ensurePool(){
