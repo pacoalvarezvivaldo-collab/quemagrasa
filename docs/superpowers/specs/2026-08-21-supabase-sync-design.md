@@ -74,8 +74,8 @@ create policy "own row only" on user_state
 2. De ahí en adelante: cada carrera nueva (`saveHistoryEntry`) se guarda local **y** se inserta a Supabase al mismo tiempo, si hay sesión activa.
 
 **`user_state` (peso + progreso del plan, fila única):**
-1. Primer login en un dispositivo: si ya existe fila remota, **remota gana** y sobreescribe lo local de ese dispositivo. Si no existe fila remota, se sube la local.
-2. De ahí en adelante: cada cambio (peso nuevo, día completado, cambio de nivel) hace upsert inmediato a Supabase mientras haya sesión — local y remoto quedan en lock-step en cada guardado, no hay conflictos que resolver después.
+1. Cada vez que se abre la app con sesión activa (no solo la primera vez): si existe fila remota, **remota gana** y sobreescribe lo local de ese dispositivo. Si no existe fila remota, se sube la local. Se revisa en cada apertura — así un dispositivo que estuvo cerrado mientras otro hacía cambios no pisa esos cambios más nuevos al volver a abrirse.
+2. Además: cada cambio (peso nuevo, día completado, cambio de nivel) hace upsert inmediato a Supabase mientras haya sesión activa.
 
 **Sin sesión:** cero llamadas a Supabase, comportamiento idéntico al actual.
 
@@ -86,6 +86,15 @@ Botón "☁️ Sincronizar" en el topbar de `correr.html` y `entrenamientos.html
 `email` → "Enviar link" → estado "revisa tu correo" → usuario toca el link en su correo → vuelve a la app con sesión activa (detectada automático por `supabase-js`) → botón cambia a "☁️✓" (tocarlo de nuevo = cerrar sesión).
 
 Quien no toque el botón nunca dispara ninguna llamada a Supabase.
+
+## CSP (Content-Security-Policy)
+
+Ambas páginas tienen CSP restrictivo hoy y hay que ampliarlo, si no las llamadas a Supabase se bloquean solas:
+
+- `correr.html`: `connect-src 'none'` (bloquea toda red) y `script-src` no incluye ningún CDN de Supabase.
+- `entrenamientos.html`: `script-src 'self' 'unsafe-inline'` (sin CDNs) y `connect-src` solo permite `https://cdn.jsdelivr.net`.
+
+Cambio necesario en ambas: agregar `https://esm.sh` a `script-src` (de ahí se importa `@supabase/supabase-js` dinámicamente) y `https://*.supabase.co` a `connect-src` (REST + Auth del proyecto). El resto de las directivas no cambia.
 
 ## Setup (una vez, fuera del código)
 
