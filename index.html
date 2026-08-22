@@ -240,6 +240,40 @@ function renderProgress(){
   const last = log[log.length-1];
   sub.textContent = `Último registro: ${last.weightKg} kg`;
   document.getElementById('progress-today-weight').value = last.weightKg;
+
+  renderSummary(log);
+}
+
+function fmtDate(dateStr){
+  const [y,m,d] = dateStr.split('-');
+  return `${d}/${m}`;
+}
+
+function renderSummary(log){
+  const s = WeightLog.weightChangeSummary(log);
+  const el = document.getElementById('progress-summary');
+  if(!s){ el.innerHTML = ''; return; }
+  const verb = s.deltaKg >= 0 ? 'bajado' : 'subido';
+  const abs = Math.abs(s.deltaKg);
+  let html = `Has ${verb} ${abs.toFixed(1)} kg desde el ${fmtDate(s.startDate)} `+
+    `(inicio: ${s.startWeight} kg → hoy: ${s.currentWeight} kg)`;
+
+  const goal = WeightLog.getGoal();
+  if(goal){
+    const status = WeightLog.progressStatus(WeightLog.todayStr(), s.startDate, s.startWeight, goal.date, goal.weightKg, s.currentWeight);
+    let line;
+    if(status.phase === 'done'){
+      line = status.met ? 'Meta cumplida 🎉' : `No se alcanzó la meta — te quedaste a ${status.diffKg.toFixed(1)} kg`;
+    } else if(status.phase === 'ontrack'){
+      line = 'Vas a tiempo';
+    } else if(status.phase === 'ahead'){
+      line = `Vas ${status.diffKg.toFixed(1)} kg adelantado`;
+    } else {
+      line = `Vas ${status.diffKg.toFixed(1)} kg atrasado respecto al plan`;
+    }
+    html += `<div class="status-line">${line}</div>`;
+  }
+  el.innerHTML = html;
 }
 
 renderProgress();
