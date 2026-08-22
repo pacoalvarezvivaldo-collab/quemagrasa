@@ -12,7 +12,7 @@ const LEVELS = {
   facil:     { label:"Fácil",     icon:"🌱", count:4, reps:[8,10,12] },
   medio:     { label:"Medio",     icon:"🔥", count:6, reps:[10,12,15] },
   dificil:   { label:"Difícil",   icon:"💥", count:8, reps:[15,18,20] },
-  espartano: { label:"Espartano", icon:"⚔️", count:8, reps:[20,20,20] }
+  espartano: { label:"Espartano", icon:"⚔️", count:8, reps:[20,30,40] }
 };
 
 const MUSCLE_CYCLE = [
