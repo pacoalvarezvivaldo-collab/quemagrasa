@@ -7,6 +7,8 @@
    Ver docs/superpowers/specs/2026-08-22-racha-design.md
    ===================================================================== */
 
+(function(){
+
 /* ---------- lógica pura (testeable sin red/DOM) ---------- */
 function todayStr(d){
   d = d || new Date();
@@ -53,3 +55,4 @@ function getCurrentStreak(){
 }
 
 window.Streak = { todayStr, computeCurrentStreak, recordActivity, getLog, getCurrentStreak };
+})();
