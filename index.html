@@ -244,6 +244,17 @@ function renderProgress(){
   renderSummary(log);
   renderGoalLink();
   renderChart(log);
+  renderBmi(last.weightKg);
+}
+
+function renderBmi(weightKg){
+  const el = document.getElementById('progress-bmi');
+  const heightCm = WeightLog.getHeightCm();
+  if(!heightCm){ el.style.display = 'none'; return; }
+  const bmi = WeightLog.bmiValue(weightKg, heightCm);
+  const band = WeightLog.bmiBand(bmi);
+  el.style.display = 'flex';
+  el.innerHTML = `<span class="bmi-dot" style="background:${band.color}"></span> IMC ${bmi} · ${band.label}`;
 }
 
 function renderChart(log){
