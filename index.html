@@ -50,6 +50,11 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 .egg-big { font-size:32px; font-weight:800; color:var(--accent); line-height:1.4; }
 .egg-small { font-size:15px; color:var(--muted); margin-top:10px; line-height:1.5; }
 .rainbow-zone { position:fixed; top:0; height:16px; width:16.6667vw; z-index:400; }
+
+.tap-ripple { position:fixed; width:14px; height:14px; border-radius:50%; background:var(--accent);
+  opacity:.45; transform:translate(-50%,-50%) scale(0); pointer-events:none; z-index:250;
+  animation:tap-ripple-anim .55s ease-out forwards; }
+@keyframes tap-ripple-anim { to { transform:translate(-50%,-50%) scale(16); opacity:0; } }
 </style>
 </head>
 <body>
@@ -177,6 +182,17 @@ document.querySelectorAll('.rainbow-zone').forEach(zone=>{
 });
 
 try{ if(localStorage.getItem(KEY_RAINBOW)==='1') startRainbow(); }catch(e){}
+
+/* toque en zona vacía (fuera de botones/links/zonas ocultas): ripple ambient, sin acción */
+document.addEventListener('click', e=>{
+  if(e.target.closest('a, button, .rainbow-zone')) return;
+  const r = document.createElement('div');
+  r.className = 'tap-ripple';
+  r.style.left = e.clientX + 'px';
+  r.style.top = e.clientY + 'px';
+  document.body.appendChild(r);
+  r.addEventListener('animationend', ()=>r.remove());
+});
 </script>
 </body>
 </html>
