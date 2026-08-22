@@ -494,7 +494,7 @@ document.addEventListener('click', e=>{
   registerEmptyTap();
 });
 
-window.addEventListener('pageshow', e=>{ if(e.persisted) try{ renderProgress(); }catch(err){} });
+window.addEventListener('pageshow', e=>{ if(e.persisted){ try{ renderProgress(); }catch(err){} try{ renderStreak(); }catch(err){} } });
 
 /* easter egg oculto: 60 taps seguidos en zona vacía → los botones "caen" y se pueden arrastrar */
 let emptyTapCount = 0, emptyTapResetTimer = null;

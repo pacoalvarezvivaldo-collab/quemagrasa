@@ -19,7 +19,7 @@ function todayStr(d){
 }
 
 function daysBetween(dateStrA, dateStrB){
-  return (new Date(dateStrB+'T00:00:00') - new Date(dateStrA+'T00:00:00')) / 86400000;
+  return (new Date(dateStrB+'T00:00:00Z') - new Date(dateStrA+'T00:00:00Z')) / 86400000;
 }
 
 function computeCurrentStreak(log, todayDateStr){
@@ -38,7 +38,7 @@ function computeCurrentStreak(log, todayDateStr){
 
 const KEY_LOG = 'qg_activity_log';
 
-function getLog(){ try{ return JSON.parse(localStorage.getItem(KEY_LOG))||[]; }catch(e){ return []; } }
+function getLog(){ try{ const v = JSON.parse(localStorage.getItem(KEY_LOG)); return Array.isArray(v) ? v : []; }catch(e){ return []; } }
 function saveLog(log){ try{ localStorage.setItem(KEY_LOG, JSON.stringify(log)); }catch(e){} }
 
 function recordActivity(){
