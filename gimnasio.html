@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gimnasio">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d0d0f">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.jsdelivr.net; connect-src https://cdn.jsdelivr.net; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
+<title>Gimnasio · Plan 30 días</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+:root {
+  --bg:#0d0d0f; --surface:#18181c; --surface2:#222228;
+  --border:rgba(255,255,255,0.08); --text:#f0efe8; --muted:#777;
+  --accent:#EF9F27; --accent-text:#000;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+html, body { height:100%; background:var(--bg); overscroll-behavior:none; }
+body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-top);
+  -webkit-user-select:none; user-select:none; touch-action:manipulation; }
+
+.topbar { display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px 9px 18px; border-bottom:1px solid var(--border); }
+.topbar-title { font-size:13px; font-weight:800; letter-spacing:.03em; }
+.gear-btn { background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  width:34px; height:34px; border-radius:10px; font-size:15px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; text-decoration:none;
+  -webkit-tap-highlight-color:transparent; }
+
+.screen { display:none; padding:20px calc(20px + env(safe-area-inset-right,0px)) calc(24px + var(--safe-bot));
+  max-width:480px; margin:0 auto; }
+.screen.show { display:block; }
+
+/* ---- nivel ---- */
+.level-intro { font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.5; }
+.level-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.level-card { width:100%; background:var(--surface); border:1.5px solid var(--border); border-radius:16px;
+  padding:18px 10px; text-align:center; cursor:pointer; color:var(--text); font-family:'Syne',sans-serif;
+  -webkit-tap-highlight-color:transparent; }
+.level-card .l-icon { font-size:26px; display:block; margin-bottom:6px; }
+.level-card .l-name { font-weight:800; font-size:14px; display:block; }
+.level-card .l-sub { font-size:10px; color:var(--muted); margin-top:3px; display:block; }
+
+/* ---- calendario ---- */
+.cal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-size:12px; color:var(--muted); }
+.cal-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+.cal-day { background:var(--surface); border:1.5px solid var(--border); border-radius:12px;
+  padding:10px 2px; text-align:center; cursor:pointer; color:var(--text); font-family:'Space Mono',monospace;
+  -webkit-tap-highlight-color:transparent; }
+.cal-day.done { background:var(--accent); border-color:var(--accent); color:var(--accent-text); }
+.cal-day.current:not(.done) { border-color:var(--accent); border-width:2px; }
+.cal-num { display:block; font-weight:700; font-size:15px; }
+.cal-icon { display:block; font-size:12px; margin-top:2px; }
+
+/* ---- jugador de ejercicio ---- */
+.player-back { background:none; border:none; color:var(--muted); font-family:'Syne',sans-serif;
+  font-size:12px; cursor:pointer; padding:0 0 14px; -webkit-tap-highlight-color:transparent; }
+.player-head { font-size:11px; color:var(--muted); text-align:center; margin-bottom:12px;
+  letter-spacing:.05em; text-transform:uppercase; }
+.ex-gif { width:100%; max-width:280px; display:block; margin:0 auto; border-radius:16px; background:var(--surface2); }
+.ex-name { text-align:center; font-size:20px; font-weight:800; margin-top:14px; }
+.ex-reps { text-align:center; font-family:'Space Mono',monospace; font-size:34px; font-weight:700; color:var(--accent); margin-top:6px; }
+.ex-tip { display:none; text-align:center; font-size:11.5px; color:var(--muted); background:var(--surface);
+  border:1px solid var(--border); border-radius:10px; padding:7px 12px; margin:10px auto 0; max-width:280px; }
+.ex-tip.show { display:block; }
+.player-controls { display:flex; gap:8px; margin-top:18px; }
+.p-btn { border:none; border-radius:14px; padding:14px; font-family:'Syne',sans-serif;
+  font-size:13px; font-weight:700; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.p-btn-done { background:var(--accent); color:var(--accent-text); flex:2; }
+.p-btn-prev, .p-btn-pause { background:var(--surface2); color:var(--text); border:1px solid var(--border); flex:1; }
+.p-btn:disabled { opacity:.35; cursor:default; }
+
+.rest-box { display:none; text-align:center; margin-top:18px; }
+.rest-box.show { display:block; }
+.rest-timer { font-family:'Space Mono',monospace; font-size:56px; font-weight:700; color:var(--accent); }
+.rest-next { font-size:13px; color:var(--muted); margin-top:6px; }
+.rest-pause { margin-top:14px; background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  border-radius:12px; padding:10px 22px; cursor:pointer; font-family:'Syne',sans-serif; font-size:13px;
+  -webkit-tap-highlight-color:transparent; }
+
+.upcoming-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin:22px 0 8px; }
+.up-row { padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
+
+/* ---- sesión completa ---- */
+.complete-box { text-align:center; padding-top:60px; }
+.complete-icon { font-size:60px; }
+.complete-title { font-size:24px; font-weight:800; margin-top:10px; }
+.complete-sub { color:var(--muted); margin-top:8px; font-size:13px; }
+.complete-btn { margin-top:26px; background:var(--accent); color:var(--accent-text); border:none;
+  border-radius:14px; padding:14px 30px; font-weight:700; font-family:'Syne',sans-serif; cursor:pointer;
+  -webkit-tap-highlight-color:transparent; }
+
+/* ---- easter egg espartano ---- */
+.egg-overlay { position:fixed; inset:0; background:#0d0d0f; display:flex; align-items:center; justify-content:center;
+  z-index:300; opacity:0; pointer-events:none; transition:opacity .3s; padding:30px; text-align:center; }
+.egg-overlay.show { opacity:1; pointer-events:all; }
+.egg-text { font-size:19px; font-weight:800; color:var(--accent); line-height:1.5; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="gear-btn" href="index.html" title="Volver al inicio">←</a>
+  <span class="topbar-title">🏢 Gimnasio</span>
+  <button class="gear-btn" id="level-gear-btn" onclick="openLevelPicker()">⚙</button>
+</div>
+
+<div class="screen" id="level-screen">
+  <div id="level-cancel-wrap" style="display:none;margin-bottom:14px;">
+    <button class="gear-btn" style="width:auto;padding:0 14px;" onclick="backToCalendar()">← Cancelar</button>
+  </div>
+  <p class="level-intro">Elige tu nivel para empezar el plan. Define cuántos ejercicios haces por sesión — puedes cambiarlo después.</p>
+  <div class="level-grid">
+    <button class="level-card" onclick="pickLevel('facil')">
+      <span class="l-icon">🌱</span><span class="l-name">Fácil</span><span class="l-sub">4 ejercicios</span>
+    </button>
+    <button class="level-card" onclick="pickLevel('medio')">
+      <span class="l-icon">🔥</span><span class="l-name">Medio</span><span class="l-sub">6 ejercicios</span>
+    </button>
+    <button class="level-card" onclick="pickLevel('dificil')">
+      <span class="l-icon">💥</span><span class="l-name">Difícil</span><span class="l-sub">8 ejercicios</span>
+    </button>
+    <button class="level-card" onclick="pickLevel('espartano')">
+      <span class="l-icon">⚔️</span><span class="l-name">Espartano</span><span class="l-sub">8, más intenso</span>
+    </button>
+  </div>
+</div>
+
+<div class="screen" id="calendar-screen">
+  <div class="cal-head">
+    <span id="cal-level"></span>
+    <span id="cal-progress"></span>
+  </div>
+  <div class="cal-grid" id="cal-grid"></div>
+</div>
+
+<div class="screen" id="player-screen">
+  <button class="player-back" onclick="backToCalendar()">← Calendario</button>
+  <div class="player-head" id="player-head"></div>
+  <img class="ex-gif" id="ex-img" alt="">
+  <div class="ex-name" id="ex-name"></div>
+  <div class="ex-reps" id="ex-reps"></div>
+  <div class="ex-tip" id="ex-tip"></div>
+
+  <div class="player-controls" id="player-controls">
+    <button class="p-btn p-btn-prev" id="btn-prev" onclick="prevExercise()">⏮</button>
+    <button class="p-btn p-btn-pause" id="btn-pause" onclick="togglePause()">⏸</button>
+    <button class="p-btn p-btn-done" id="btn-done" onclick="markDone()">✓ Listo</button>
+  </div>
+
+  <div class="rest-box" id="rest-box">
+    <div class="rest-timer" id="rest-timer">30</div>
+    <div class="rest-next" id="rest-next"></div>
+    <button class="rest-pause" id="rest-pause-btn" onclick="togglePause()">⏸</button>
+  </div>
+
+  <div id="upcoming-wrap">
+    <div class="upcoming-label">Siguen</div>
+    <div id="upcoming-list"></div>
+  </div>
+</div>
+
+<div class="screen" id="complete-screen">
+  <div class="complete-box">
+    <div class="complete-icon">🔥</div>
+    <div class="complete-title">¡Día <span id="complete-day"></span> completo!</div>
+    <div class="complete-sub">Sigue así — te espera el siguiente día en el calendario.</div>
+    <button class="complete-btn" onclick="backToCalendar()">Volver al calendario</button>
+  </div>
+</div>
+
+<div class="egg-overlay" id="egg-overlay">
+  <div class="egg-text" id="egg-text"></div>
+</div>
+
+<script src="plan-engine.js"></script>
+<script>
+/* Gimnasio: sin filtro de equipo (todo el pool requiere equipo, ese es el punto),
+   sin chairTip, sin sync — progreso 100% local con prefijo gym_. */
+PlanEngine.init({
+  equipmentUrls: [
+    'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/band.json',
+    'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/barbell.json',
+    'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/cable.json',
+    'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/dumbbell.json',
+    'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/ez-bar.json',
+    'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/kettlebell.json',
+    'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/lever.json',
+    'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/machine.json',
+    'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/other.json',
+    'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/sled.json',
+    'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/smith.json'
+  ],
+  keyPrefix: 'gym_'
+});
+</script>
+</body>
+</html>
