@@ -346,6 +346,7 @@ function updateRestUI(){
 function completeSession(){
   COMPLETED.add(currentDay);
   saveCompleted();
+  if(window.Streak) Streak.recordActivity();
   document.getElementById('complete-day').textContent = currentDay;
   showScreen('complete');
 }
