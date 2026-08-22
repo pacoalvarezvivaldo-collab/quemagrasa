@@ -201,6 +201,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="sync.js"></script>
 <script src="weight-log.js"></script>
+<script src="streak.js"></script>
 <script>
 /* =====================================================================
    CORRER / CAMINAR — rastreo GPS, mapa Leaflet+OSM, pasos estimados
@@ -463,6 +464,7 @@ function stopTracking(){
   lastResult = { mode, distanceM, elapsedS, steps, kcal };
   const entry = { date: Date.now(), mode, distanceM, elapsedS, steps, kcal };
   saveHistoryEntry(entry);
+  if(window.Streak) Streak.recordActivity();
   if(window.QuemaSync) QuemaSync.pushRun(entry);
 
   document.getElementById('sum-dist').textContent = (distanceM/1000).toFixed(2) + ' km';
