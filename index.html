@@ -243,6 +243,45 @@ function renderProgress(){
 
   renderSummary(log);
   renderGoalLink();
+  renderChart(log);
+}
+
+function renderChart(log){
+  const wrap = document.getElementById('progress-chart-wrap');
+  if(log.length < 2){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = buildChartSvg(log, WeightLog.getGoal());
+}
+
+function buildChartSvg(log, goal){
+  const W = 280, H = 140, PAD = 8;
+  const today = WeightLog.todayStr();
+  const firstDate = log[0].date;
+  let lastDate = log[log.length-1].date;
+  if(goal && goal.date > lastDate) lastDate = goal.date;
+  if(today > lastDate) lastDate = today;
+
+  const weights = log.map(e=>e.weightKg);
+  if(goal) weights.push(goal.weightKg);
+  const minW = Math.min(...weights), maxW = Math.max(...weights);
+  const span = Math.max(0.5, maxW - minW);
+  const yMin = minW - span*0.1, yMax = maxW + span*0.1;
+  const totalDays = Math.max(1, WeightLog.daysBetween(firstDate, lastDate));
+
+  const xScale = dateStr => PAD + (WeightLog.daysBetween(firstDate, dateStr)/totalDays) * (W - PAD*2);
+  const yScale = w => H - PAD - ((w - yMin)/(yMax - yMin)) * (H - PAD*2);
+
+  const realPts = log.map(e => `${xScale(e.date).toFixed(1)},${yScale(e.weightKg).toFixed(1)}`).join(' ');
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  svg += `<polyline points="${realPts}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
+  if(goal){
+    const gx1 = xScale(firstDate).toFixed(1), gy1 = yScale(log[0].weightKg).toFixed(1);
+    const gx2 = xScale(goal.date).toFixed(1), gy2 = yScale(goal.weightKg).toFixed(1);
+    svg += `<line x1="${gx1}" y1="${gy1}" x2="${gx2}" y2="${gy2}" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  }
+  svg += `<text x="${PAD}" y="10" font-size="8" fill="var(--muted)">${yMax.toFixed(1)} kg</text>`;
+  svg += `<text x="${PAD}" y="${H-2}" font-size="8" fill="var(--muted)">${yMin.toFixed(1)} kg</text>`;
+  svg += `</svg>`;
+  return svg;
 }
 
 function renderGoalLink(){
