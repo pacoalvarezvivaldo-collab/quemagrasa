@@ -107,7 +107,10 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <div class="topbar">
   <a class="gear-btn" href="index.html" title="Volver al inicio">←</a>
   <span class="topbar-title">🏋️ Plan 30 días</span>
-  <button class="gear-btn" id="level-gear-btn" onclick="openLevelPicker()">⚙</button>
+  <div style="display:flex;gap:8px;">
+    <button class="gear-btn" id="sync-btn" style="display:none" title="Sincronizar entre dispositivos">☁️</button>
+    <button class="gear-btn" id="level-gear-btn" onclick="openLevelPicker()">⚙</button>
+  </div>
 </div>
 
 <div class="screen" id="level-screen">
@@ -178,6 +181,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   <div class="egg-text" id="egg-text"></div>
 </div>
 
+<script src="sync.js"></script>
 <script>
 /* =====================================================================
    ENTRENAMIENTOS — plan de 30 días, peso corporal, sin equipo
@@ -215,14 +219,23 @@ let currentDay = null, currentSession = [], currentIdx = 0;
 let paused = false, pausedAt = 0, restLeft = 0, restEndAt = 0, restWarned = false, restTimerId = null;
 
 /* ---------- persistencia ---------- */
-function saveLevel(){ try{ localStorage.setItem(KEY_LEVEL, LEVEL_KEY); }catch(e){} }
+function saveLevel(){
+  try{ localStorage.setItem(KEY_LEVEL, LEVEL_KEY); }catch(e){}
+  if(window.QuemaSync) QuemaSync.pushUserState({ plan_level: LEVEL_KEY });
+}
 function loadLevel(){ try{ return localStorage.getItem(KEY_LEVEL); }catch(e){ return null; } }
-function saveCompleted(){ try{ localStorage.setItem(KEY_DONE, JSON.stringify([...COMPLETED])); }catch(e){} }
+function saveCompleted(){
+  try{ localStorage.setItem(KEY_DONE, JSON.stringify([...COMPLETED])); }catch(e){}
+  if(window.QuemaSync) QuemaSync.pushUserState({ plan_completed_days: [...COMPLETED] });
+}
 function loadCompleted(){
   try{ const v=localStorage.getItem(KEY_DONE); return v ? new Set(JSON.parse(v)) : new Set(); }
   catch(e){ return new Set(); }
 }
-function saveCurrentDay(day){ try{ localStorage.setItem(KEY_CURRENT, String(day)); }catch(e){} }
+function saveCurrentDay(day){
+  try{ localStorage.setItem(KEY_CURRENT, String(day)); }catch(e){}
+  if(window.QuemaSync) QuemaSync.pushUserState({ plan_current_day: day });
+}
 function loadCurrentDay(){
   try{ const v=localStorage.getItem(KEY_CURRENT); return v ? parseInt(v,10) : null; }
   catch(e){ return null; }
@@ -528,10 +541,26 @@ function completeSession(){
 }
 
 /* ---------- init ---------- */
-(function init(){
+(async function init(){
   LEVEL_KEY = loadLevel();
   COMPLETED = loadCompleted();
   CURRENT_DAY_SAVED = loadCurrentDay();
+
+  if(window.QuemaSync){
+    await QuemaSync.init(document.getElementById('sync-btn'));
+    if(QuemaSync.isSignedIn()){
+      const remote = await QuemaSync.pullUserState();
+      if(remote){
+        if(remote.level){ LEVEL_KEY = remote.level; try{ localStorage.setItem(KEY_LEVEL, LEVEL_KEY); }catch(e){} }
+        if(remote.currentDay != null){ CURRENT_DAY_SAVED = remote.currentDay; try{ localStorage.setItem(KEY_CURRENT, String(remote.currentDay)); }catch(e){} }
+        if(remote.completedDays && remote.completedDays.length){
+          COMPLETED = new Set(remote.completedDays);
+          try{ localStorage.setItem(KEY_DONE, JSON.stringify([...COMPLETED])); }catch(e){}
+        }
+      }
+    }
+  }
+
   if(LEVEL_KEY && LEVELS[LEVEL_KEY]){
     renderCalendar();
     showScreen('calendar');
