@@ -28,6 +28,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 .hero { text-align:center; margin-bottom:26px; }
 .hero-title { font-size:26px; font-weight:800; letter-spacing:-.01em; }
 .hero-sub { font-size:12.5px; color:var(--muted); margin-top:6px; }
+.hero-streak { display:none; font-size:12.5px; color:var(--accent); font-weight:700; margin-top:8px; }
 
 .mode-list { display:flex; flex-direction:column; gap:8px; }
 .mode-row { display:flex; align-items:center; gap:14px; width:100%; background:var(--surface);
@@ -106,6 +107,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   <div class="hero">
     <div class="hero-title"><span class="flame" id="flame">🔥</span> Quemagrasa</div>
     <div class="hero-sub">Elige cómo quieres entrenar hoy</div>
+    <div class="hero-streak" id="hero-streak"></div>
   </div>
 
   <div class="mode-list">
@@ -200,6 +202,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <div class="rainbow-zone" data-z="5" style="left:83.3333vw"></div>
 
 <script src="weight-log.js"></script>
+<script src="streak.js"></script>
 <script>
 /* ---------- Tu progreso: peso, estatura, meta, IMC ---------- */
 let progressOpen = false;
@@ -401,6 +404,19 @@ function renderSummary(log){
 }
 
 try{ renderProgress(); }catch(e){}
+
+function renderStreak(){
+  const el = document.getElementById('hero-streak');
+  if(!window.Streak){ el.style.display = 'none'; return; }
+  const n = Streak.getCurrentStreak();
+  if(n > 0){
+    el.textContent = `🔥 ${n} día${n===1?'':'s'} seguido${n===1?'':'s'}`;
+    el.style.display = '';
+  } else {
+    el.style.display = 'none';
+  }
+}
+try{ renderStreak(); }catch(e){}
 
 /* easter egg: 7 taps al 🔥 en menos de 3s */
 let flameTaps = 0, flameTimer = null;
