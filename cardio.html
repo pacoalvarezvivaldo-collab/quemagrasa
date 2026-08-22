@@ -444,6 +444,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
   <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" type="audio/wav">
 </audio>
 
+<script src="streak.js"></script>
 <script>
 /* =====================================================================
    QUEMAGRASA v3
@@ -1097,6 +1098,7 @@ async function recordSession(){
   if(sessions.length>500) sessions=sessions.slice(-500);
   try{ await Store.set(KEY_HIST,sessions); }catch(e){}
   renderHistory();
+  if(window.Streak) Streak.recordActivity();
   const st=computeStreak();
   if(st>1){
     const el=document.getElementById('finish-sub');
