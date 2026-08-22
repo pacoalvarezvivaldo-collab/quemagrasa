@@ -200,6 +200,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="sync.js"></script>
+<script src="weight-log.js"></script>
 <script>
 /* =====================================================================
    CORRER / CAMINAR — rastreo GPS, mapa Leaflet+OSM, pasos estimados
@@ -214,7 +215,7 @@ const MET = { correr:9.8, caminar:3.8 };
 const MIN_MOVE_M = 3;
 const MIN_ACCURACY_M = 30;
 
-const KEY_HISTORY = 'correr_history', KEY_WEIGHT = 'correr_weight', KEY_MODE = 'correr_mode';
+const KEY_HISTORY = 'correr_history', KEY_MODE = 'correr_mode';
 
 let mode = 'correr';
 let userWeight = 70;
@@ -238,11 +239,11 @@ function saveWeight(v){
   const n = parseFloat(v);
   if(!isNaN(n) && n>=30 && n<=250){
     userWeight = n;
-    try{ localStorage.setItem(KEY_WEIGHT, String(n)); }catch(e){}
+    WeightLog.saveTodayWeight(n);
     if(window.QuemaSync) QuemaSync.pushUserState({ weight_kg: n });
   }
 }
-function loadWeight(){ try{ const v=parseFloat(localStorage.getItem(KEY_WEIGHT)); return (v>=30 && v<=250)?v:70; }catch(e){ return 70; } }
+function loadWeight(){ const v = WeightLog.getLatestWeight(); return (v>=30 && v<=250)?v:70; }
 function saveModePref(){ try{ localStorage.setItem(KEY_MODE, mode); }catch(e){} }
 function loadModePref(){ try{ return localStorage.getItem(KEY_MODE); }catch(e){ return null; } }
 
@@ -551,7 +552,6 @@ function renderHistory(){
   const remote = await QuemaSync.pullUserState();
   if(remote && remote.weightKg != null){
     userWeight = remote.weightKg;
-    try{ localStorage.setItem(KEY_WEIGHT, String(remote.weightKg)); }catch(e){}
     document.getElementById('weight-input').value = remote.weightKg;
   }
 })();
