@@ -6,8 +6,8 @@
    ===================================================================== */
 (function(){
 
-const SUPABASE_URL = '';      // <- pega aquí la Project URL de supabase.com
-const SUPABASE_ANON_KEY = ''; // <- pega aquí la anon public key
+const SUPABASE_URL = 'https://plcamneqwvhpduytoant.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsY2FtbmVxd3ZocGR1eXRvYW50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczNjM4NTgsImV4cCI6MjEwMjkzOTg1OH0.BRjwW6YclXiqExMWQTSamS4RGdx4g7Q2wo1QAyCI0_k';
 
 let client = null, session = null, syncBtn = null;
 
