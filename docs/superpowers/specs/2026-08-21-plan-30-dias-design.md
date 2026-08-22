@@ -41,7 +41,7 @@ Se agrupa por `bodyPart` (valores observados: `legs`, `core`, `arms`, `cardio`, 
 - Cada día = una sesión con N ejercicios del grupo muscular de ese día, N según el nivel elegido:
 
 | Nivel | Ejercicios por sesión |
-|---|---|
+| --- | --- |
 | Fácil | 2–4 |
 | Medio | 4–6 |
 | Difícil | 6–8 |
@@ -50,11 +50,11 @@ Se agrupa por `bodyPart` (valores observados: `legs`, `core`, `arms`, `cardio`, 
 - Repeticiones por ejercicio, según nivel y en qué tercio del plan está el día (bloques de 10 días):
 
 | Nivel | Días 1–10 | Días 11–20 | Días 21–30 |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Fácil | 8 | 10 | 12 |
 | Medio | 10 | 12 | 15 |
 | Difícil | 15 | 18 | 20 |
-| Espartano | 20 | 20 | 20 |
+| Espartano | 20 | 30 | 40 |
 
 - Calendario: lista de 30 días, cada uno marcado como completado/pendiente. Tocar un día abierto (no bloqueado — ver "fuera de alcance de esta duda": por ahora todos los días están siempre accesibles, no hay bloqueo secuencial salvo que el usuario pida lo contrario más adelante) lleva a la pantalla de ejercicio con la sesión de ese día.
 
@@ -90,7 +90,7 @@ Después continúa el flujo normal (pantalla del primer ejercicio del día).
 
 ## Fuera de alcance de esta spec
 
-- Sección de "correr".
+- Sección de "correr"
 - Otros equipos propios para el timer de `index.html`.
 - Bloqueo secuencial de días (obligar a completar el día N antes de abrir el N+1) — todos los días están accesibles desde el inicio, salvo que se pida lo contrario.
 - Edición fina del pool de ejercicios (denylist de los que en realidad piden equipo) — issue conocido, no bloqueante.
