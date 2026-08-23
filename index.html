@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Quemagrasa">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d0d0f">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://esm.sh; img-src 'self' data:; media-src 'self' data:; connect-src https://*.supabase.co; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
 <title>Quemagrasa</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
@@ -206,6 +206,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <div class="rainbow-zone" data-z="4" style="left:66.6667vw"></div>
 <div class="rainbow-zone" data-z="5" style="left:83.3333vw"></div>
 
+<script src="sync.js"></script>
 <script src="weight-log.js"></script>
 <script src="streak.js"></script>
 <script>
@@ -227,6 +228,10 @@ function saveFirstEntry(){
   }
   WeightLog.saveTodayWeight(w);
   WeightLog.saveHeightCm(h);
+  if(window.QuemaSync){
+    QuemaSync.pushWeightEntry({ date: WeightLog.todayStr(), weightKg: w });
+    QuemaSync.pushUserState({ height_cm: h });
+  }
   renderProgress();
 }
 
@@ -237,6 +242,7 @@ function saveTodayEntry(){
     return;
   }
   WeightLog.saveTodayWeight(w);
+  if(window.QuemaSync) QuemaSync.pushWeightEntry({ date: WeightLog.todayStr(), weightKg: w });
   renderProgress();
 }
 
@@ -285,6 +291,7 @@ function saveHeightEntry(){
     return;
   }
   WeightLog.saveHeightCm(h);
+  if(window.QuemaSync) QuemaSync.pushUserState({ height_cm: h });
   document.getElementById('progress-height-form').style.display = 'none';
   renderProgress();
 }
@@ -366,12 +373,14 @@ function saveGoalEntry(){
     return;
   }
   WeightLog.saveGoal(w, d);
+  if(window.QuemaSync) QuemaSync.pushUserState({ goal_weight_kg: w, goal_date: d });
   document.getElementById('progress-goal-form').style.display = 'none';
   renderProgress();
 }
 
 function removeGoalEntry(){
   WeightLog.clearGoal();
+  if(window.QuemaSync) QuemaSync.pushUserState({ goal_weight_kg: null, goal_date: null });
   document.getElementById('progress-goal-form').style.display = 'none';
   renderProgress();
 }
@@ -422,6 +431,25 @@ function renderStreak(){
   }
 }
 try{ renderStreak(); }catch(e){}
+
+/* al cargar, si ya hay sesión de sync activa (iniciada desde Casa o Correr), trae lo del
+   servidor y lo fusiona con lo local — sin sesión, esto no hace ninguna llamada de red. */
+async function syncPullOnLoad(){
+  if(!(window.QuemaSync && QuemaSync.isSignedIn())) return;
+  const remote = await QuemaSync.pullUserState();
+  if(remote){
+    if(remote.heightCm != null) WeightLog.saveHeightCm(remote.heightCm);
+    if(remote.goalWeightKg != null && remote.goalDate) WeightLog.saveGoal(remote.goalWeightKg, remote.goalDate);
+    else WeightLog.clearGoal(); // el remoto es la fuente de verdad de la meta: si allá ya no hay meta, se limpia aquí también
+    if(remote.activityLog && remote.activityLog.length) Streak.mergeRemoteLog(remote.activityLog);
+  }
+  const mergedWeightLog = await QuemaSync.pullAndMergeWeightLog(WeightLog.getLog());
+  WeightLog.mergeRemoteLog(mergedWeightLog);
+  await QuemaSync.pushUserState({ activity_log: Streak.getLog() });
+  renderProgress();
+  renderStreak();
+}
+if(window.QuemaSync) syncPullOnLoad().catch(()=>{});
 
 /* easter egg: 7 taps al 🔥 en menos de 3s */
 let flameTaps = 0, flameTimer = null;
