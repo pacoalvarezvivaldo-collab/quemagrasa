@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Estadísticas">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d0d0f">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
+<title>Estadísticas · Quemagrasa</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+:root {
+  --bg:#0d0d0f; --surface:#18181c; --surface2:#222228;
+  --border:rgba(255,255,255,0.08); --text:#f0efe8; --muted:#777;
+  --accent:#EF9F27; --accent-text:#000;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+html, body { height:100%; background:var(--bg); overscroll-behavior:none; }
+body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-top);
+  -webkit-user-select:none; user-select:none; touch-action:manipulation; }
+
+.topbar { display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px 9px 18px; border-bottom:1px solid var(--border); }
+.topbar-title { font-size:13px; font-weight:800; letter-spacing:.03em; }
+.gear-btn { background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  width:34px; height:34px; border-radius:10px; font-size:15px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; text-decoration:none;
+  -webkit-tap-highlight-color:transparent; }
+
+.wrap { max-width:480px; margin:0 auto; padding:20px calc(20px + env(safe-area-inset-right,0px)) calc(24px + var(--safe-bot)); }
+
+.stat-card { background:var(--surface); border:1.5px solid var(--border); border-radius:14px;
+  padding:16px; margin-bottom:10px; }
+.stat-card-title { font-weight:800; font-size:14px; display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.stat-row { display:flex; justify-content:space-between; align-items:baseline; padding:4px 0; font-size:13px; }
+.stat-row .stat-label { color:var(--muted); }
+.stat-row .stat-value { font-family:'Space Mono',monospace; font-weight:700; }
+.stat-line { color:var(--muted); font-size:13px; padding:4px 0; }
+.stat-empty { color:var(--muted); font-size:12.5px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="gear-btn" href="index.html" title="Volver al inicio">←</a>
+  <span class="topbar-title">📈 Estadísticas</span>
+  <span style="width:34px"></span>
+</div>
+
+<div class="wrap">
+  <div class="stat-card">
+    <div class="stat-card-title">📊 Resumen general</div>
+    <div class="stat-line" id="stat-total-days"></div>
+    <div class="stat-line" id="stat-current-streak"></div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-title">🏃‍♂️ Correr / Caminar</div>
+    <div class="stat-row"><span class="stat-label">Sesiones</span><span class="stat-value" id="correr-sesiones"></span></div>
+    <div class="stat-row"><span class="stat-label">Distancia total</span><span class="stat-value" id="correr-km"></span></div>
+    <div class="stat-row"><span class="stat-label">Kcal quemadas</span><span class="stat-value" id="correr-kcal"></span></div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-title">🌀 Cardio (Elíptica · Caminadora · Escaladora)</div>
+    <div class="stat-row"><span class="stat-label">Sesiones</span><span class="stat-value" id="cardio-sesiones"></span></div>
+    <div class="stat-row"><span class="stat-label">Kcal quemadas</span><span class="stat-value" id="cardio-kcal"></span></div>
+    <div class="stat-row"><span class="stat-label">Sprints totales</span><span class="stat-value" id="cardio-sprints"></span></div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-title">🏠 Casa</div>
+    <div class="stat-row"><span class="stat-label">Nivel</span><span class="stat-value" id="casa-level"></span></div>
+    <div class="stat-line" id="casa-days"></div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-title">🏢 Gimnasio</div>
+    <div class="stat-row"><span class="stat-label">Nivel</span><span class="stat-value" id="gimnasio-level"></span></div>
+    <div class="stat-line" id="gimnasio-days"></div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-title">⚡ Ejercicio rápido</div>
+    <div class="stat-empty">Sin datos guardados aún</div>
+  </div>
+</div>
+
+<script src="streak.js"></script>
+<script>
+/* =====================================================================
+   estadisticas.html — vista de solo lectura: junta totales de los 5
+   modos de entrenamiento leyendo directo de las llaves de localStorage
+   que cada uno ya escribe. No engancha nada nuevo, no escribe nada.
+   Ver docs/superpowers/specs/2026-08-22-estadisticas-design.md
+   ===================================================================== */
+
+/* ---------- lógica pura (testeable sin red/DOM) ---------- */
+function uniqueDayCount(activityLog){
+  return new Set(activityLog).size;
+}
+
+function sumCorrer(history){
+  return history.reduce((acc, e) => {
+    acc.sesiones++;
+    acc.km += (e.distanceM || 0) / 1000;
+    acc.kcal += (e.kcal || 0);
+    return acc;
+  }, { sesiones: 0, km: 0, kcal: 0 });
+}
+
+function sumCardio(sessions){
+  return sessions.reduce((acc, s) => {
+    acc.sesiones++;
+    acc.kcal += (s.kcal || 0);
+    acc.sprints += (s.spr || 0);
+    return acc;
+  }, { sesiones: 0, kcal: 0, sprints: 0 });
+}
+/* ---------- fin lógica pura ---------- */
+
+const LEVEL_LABELS = {
+  facil:     { label:'Fácil',     icon:'🌱' },
+  medio:     { label:'Medio',     icon:'🔥' },
+  dificil:   { label:'Difícil',   icon:'💥' },
+  espartano: { label:'Espartano', icon:'⚔️' }
+};
+
+function readJSON(key){
+  try{ return JSON.parse(localStorage.getItem(key)) || []; }catch(e){ return []; }
+}
+
+function renderSummary(){
+  const log = readJSON('qg_activity_log');
+  const days = uniqueDayCount(log);
+  document.getElementById('stat-total-days').textContent = `${days} día${days===1?'':'s'} entrenados en total`;
+  const streak = window.Streak ? Streak.getCurrentStreak() : 0;
+  document.getElementById('stat-current-streak').textContent =
+    streak > 0 ? `🔥 ${streak} día${streak===1?'':'s'} seguido${streak===1?'':'s'}` : 'Sin racha activa';
+}
+
+function renderCorrer(){
+  const s = sumCorrer(readJSON('correr_history'));
+  document.getElementById('correr-sesiones').textContent = s.sesiones;
+  document.getElementById('correr-km').textContent = s.km.toFixed(1) + ' km';
+  document.getElementById('correr-kcal').textContent = Math.round(s.kcal) + ' kcal';
+}
+
+function renderCardio(){
+  const s = sumCardio(readJSON('qg_history'));
+  document.getElementById('cardio-sesiones').textContent = s.sesiones;
+  document.getElementById('cardio-kcal').textContent = Math.round(s.kcal) + ' kcal';
+  document.getElementById('cardio-sprints').textContent = s.sprints;
+}
+
+function renderPlan(prefix, levelElId, daysElId){
+  let level = null;
+  try{ level = localStorage.getItem(prefix + 'level'); }catch(e){}
+  const completed = readJSON(prefix + 'completed');
+  const info = LEVEL_LABELS[level];
+  document.getElementById(levelElId).textContent = info ? `${info.icon} ${info.label}` : 'Sin nivel elegido';
+  document.getElementById(daysElId).textContent = `${completed.length}/30 días completados`;
+}
+
+renderSummary();
+renderCorrer();
+renderCardio();
+renderPlan('ent_', 'casa-level', 'casa-days');
+renderPlan('gym_', 'gimnasio-level', 'gimnasio-days');
+</script>
+</body>
+</html>
