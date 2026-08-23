@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Gimnasio">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d0d0f">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.jsdelivr.net; connect-src https://cdn.jsdelivr.net; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://esm.sh; img-src 'self' data: https://cdn.jsdelivr.net; connect-src https://cdn.jsdelivr.net https://*.supabase.co; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
 <title>Gimnasio · Plan 30 días</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
@@ -178,11 +178,13 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   <div class="egg-text" id="egg-text"></div>
 </div>
 
+<script src="sync.js"></script>
 <script src="streak.js"></script>
 <script src="plan-engine.js"></script>
 <script>
 /* Gimnasio: sin filtro de equipo (todo el pool requiere equipo, ese es el punto),
-   sin chairTip, sin sync — progreso 100% local con prefijo gym_. */
+   sin chairTip. Progreso local con prefijo gym_, sincronizado si ya hay sesión
+   iniciada desde Casa o Correr — sin botón propio de inicio de sesión aquí. */
 PlanEngine.init({
   equipmentUrls: [
     'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/band.json',
@@ -197,7 +199,16 @@ PlanEngine.init({
     'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/sled.json',
     'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/smith.json'
   ],
-  keyPrefix: 'gym_'
+  keyPrefix: 'gym_',
+  onSaveLevel: level => { if(window.QuemaSync) QuemaSync.pushUserState({ gym_level: level }); },
+  onSaveCompleted: days => { if(window.QuemaSync) QuemaSync.pushUserState({ gym_completed_days: days }); },
+  onSaveCurrentDay: day => { if(window.QuemaSync) QuemaSync.pushUserState({ gym_current_day: day }); },
+  pullRemoteState: async () => {
+    if(!(window.QuemaSync && QuemaSync.isSignedIn())) return null;
+    const remote = await QuemaSync.pullUserState();
+    if(!remote) return null;
+    return { level: remote.gymLevel, currentDay: remote.gymCurrentDay, completedDays: remote.gymCompletedDays };
+  }
 });
 </script>
 </body>
