@@ -30,6 +30,22 @@ function mergeHistory(localHistory, remoteRows){
   merged.sort((a,b)=>a.date-b.date);
   return { merged, toUpload };
 }
+
+function weightEntryKey(e){ return e.date; }
+function weightRowKey(row){ return row.date; }
+function rowToWeightEntry(row){ return { date: row.date, weightKg: row.weight_kg }; }
+function mergeWeightLog(localLog, remoteRows){
+  const seen = new Set(localLog.map(weightEntryKey));
+  const merged = localLog.slice();
+  remoteRows.forEach(row=>{
+    const k = weightRowKey(row);
+    if(!seen.has(k)){ seen.add(k); merged.push(rowToWeightEntry(row)); }
+  });
+  const remoteKeys = new Set(remoteRows.map(weightRowKey));
+  const toUpload = localLog.filter(e => !remoteKeys.has(weightEntryKey(e)));
+  merged.sort((a,b)=> a.date < b.date ? -1 : (a.date > b.date ? 1 : 0));
+  return { merged, toUpload };
+}
 /* ---------- fin lógica pura ---------- */
 
 async function getClient(){
@@ -111,6 +127,29 @@ async function pullAndMergeHistory(localHistory){
   }catch(e){ return localHistory; }
 }
 
+/* ---------- weight_log ---------- */
+async function pushWeightEntry(entry){
+  if(!session) return;
+  const sb = await getClient();
+  if(!sb) return;
+  try{
+    await sb.from('weight_log').insert({ user_id: session.user.id, date: entry.date, weight_kg: entry.weightKg });
+  }catch(e){ /* offline: el dato ya quedó guardado en local, se reintenta en el próximo push */ }
+}
+
+async function pullAndMergeWeightLog(localLog){
+  if(!session) return localLog;
+  const sb = await getClient();
+  if(!sb) return localLog;
+  try{
+    const { data, error } = await sb.from('weight_log').select('*').eq('user_id', session.user.id);
+    if(error || !data) return localLog;
+    const { merged, toUpload } = mergeWeightLog(localLog, data);
+    await Promise.all(toUpload.map(pushWeightEntry));
+    return merged;
+  }catch(e){ return localLog; }
+}
+
 /* ---------- user_state ---------- */
 async function pushUserState(partial){
   if(!session) return;
@@ -128,10 +167,15 @@ async function pullUserState(){
   try{
     const { data, error } = await sb.from('user_state').select('*').eq('user_id', session.user.id).maybeSingle();
     if(error || !data) return null;
-    return { weightKg:data.weight_kg, level:data.plan_level, currentDay:data.plan_current_day,
-      completedDays:data.plan_completed_days || [] };
+    return {
+      weightKg:data.weight_kg, level:data.plan_level, currentDay:data.plan_current_day,
+      completedDays:data.plan_completed_days || [],
+      gymLevel:data.gym_level, gymCurrentDay:data.gym_current_day, gymCompletedDays:data.gym_completed_days || [],
+      heightCm:data.height_cm, goalWeightKg:data.goal_weight_kg, goalDate:data.goal_date,
+      activityLog:data.activity_log || []
+    };
   }catch(e){ return null; }
 }
 
-window.QuemaSync = { init, isSignedIn, pushRun, pullAndMergeHistory, pushUserState, pullUserState };
+window.QuemaSync = { init, isSignedIn, pushRun, pullAndMergeHistory, pushUserState, pullUserState, pushWeightEntry, pullAndMergeWeightLog };
 })();
