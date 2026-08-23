@@ -110,8 +110,16 @@ function clearGoal(){ try{ localStorage.removeItem(KEY_GOAL_W); localStorage.rem
   }catch(e){}
 })();
 
+function mergeRemoteLog(remoteEntries){
+  let log = getLog();
+  remoteEntries.forEach(e => { log = upsertEntry(log, e.date, e.weightKg); });
+  saveLog(log);
+  return log;
+}
+
 window.WeightLog = {
   todayStr, upsertEntry, latestEntry, bmiValue, bmiBand, daysBetween, theoreticalWeightAt,
   weightChangeSummary, progressStatus,
-  getLog, saveTodayWeight, getLatestWeight, getHeightCm, saveHeightCm, getGoal, saveGoal, clearGoal
+  getLog, saveTodayWeight, getLatestWeight, getHeightCm, saveHeightCm, getGoal, saveGoal, clearGoal,
+  mergeRemoteLog
 };

@@ -54,5 +54,11 @@ function getCurrentStreak(){
   return computeCurrentStreak(getLog(), todayStr());
 }
 
-window.Streak = { todayStr, computeCurrentStreak, recordActivity, getLog, getCurrentStreak };
+function mergeRemoteLog(remoteDates){
+  const merged = [...new Set([...getLog(), ...remoteDates])].sort();
+  saveLog(merged);
+  return merged;
+}
+
+window.Streak = { todayStr, computeCurrentStreak, recordActivity, getLog, getCurrentStreak, mergeRemoteLog };
 })();
