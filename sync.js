@@ -99,6 +99,16 @@ async function init(buttonEl){
   sb.auth.onAuthStateChange((_event, s)=>{ session = s; renderBtn(); });
 }
 
+/* páginas sin botón propio (Gimnasio, Progreso/Racha): heredan la sesión ya
+   persistida por el cliente de Supabase en localStorage, sin UI de login. */
+async function initSilent(){
+  const sb = await getClient();
+  if(!sb) return;
+  const { data } = await sb.auth.getSession();
+  session = data.session;
+  sb.auth.onAuthStateChange((_event, s)=>{ session = s; if(syncBtn) renderBtn(); });
+}
+
 function isSignedIn(){ return !!session; }
 
 /* ---------- run_history ---------- */
@@ -177,5 +187,5 @@ async function pullUserState(){
   }catch(e){ return null; }
 }
 
-window.QuemaSync = { init, isSignedIn, pushRun, pullAndMergeHistory, pushUserState, pullUserState, pushWeightEntry, pullAndMergeWeightLog };
+window.QuemaSync = { init, initSilent, isSignedIn, pushRun, pullAndMergeHistory, pushUserState, pullUserState, pushWeightEntry, pullAndMergeWeightLog };
 })();

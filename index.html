@@ -435,7 +435,9 @@ try{ renderStreak(); }catch(e){}
 /* al cargar, si ya hay sesión de sync activa (iniciada desde Casa o Correr), trae lo del
    servidor y lo fusiona con lo local — sin sesión, esto no hace ninguna llamada de red. */
 async function syncPullOnLoad(){
-  if(!(window.QuemaSync && QuemaSync.isSignedIn())) return;
+  if(!window.QuemaSync) return;
+  await QuemaSync.initSilent(); // sin botón propio: hereda la sesión ya persistida por Supabase, si existe
+  if(!QuemaSync.isSignedIn()) return;
   const remote = await QuemaSync.pullUserState();
   if(remote){
     if(remote.heightCm != null) WeightLog.saveHeightCm(remote.heightCm);

@@ -184,7 +184,11 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <script>
 /* Gimnasio: sin filtro de equipo (todo el pool requiere equipo, ese es el punto),
    sin chairTip. Progreso local con prefijo gym_, sincronizado si ya hay sesión
-   iniciada desde Casa o Correr — sin botón propio de inicio de sesión aquí. */
+   iniciada desde Casa o Correr — sin botón propio de inicio de sesión aquí,
+   pero initSilent() hereda esa sesión (ya persistida en localStorage por el
+   cliente de Supabase) antes de que PlanEngine intente jalar el estado remoto. */
+(async function(){
+if(window.QuemaSync) await QuemaSync.initSilent();
 PlanEngine.init({
   equipmentUrls: [
     'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/band.json',
@@ -210,6 +214,7 @@ PlanEngine.init({
     return { level: remote.gymLevel, currentDay: remote.gymCurrentDay, completedDays: remote.gymCompletedDays };
   }
 });
+})();
 </script>
 </body>
 </html>
