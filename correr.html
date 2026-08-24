@@ -202,6 +202,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <script src="sync.js"></script>
 <script src="weight-log.js"></script>
 <script src="streak.js"></script>
+<script src="prefs.js"></script>
 <script>
 /* =====================================================================
    CORRER / CAMINAR — rastreo GPS, mapa Leaflet+OSM, pasos estimados
@@ -276,6 +277,7 @@ document.body.addEventListener('click', initAudio, {once:true});
 let wakeLock = null;
 async function requestWakeLock(){
   if(wakeLock) return;
+  if(window.Prefs && !Prefs.getKeepScreenOn()) return;
   if('wakeLock' in navigator) try{ wakeLock = await navigator.wakeLock.request('screen'); }catch(e){}
 }
 async function releaseWakeLock(){
@@ -563,6 +565,9 @@ function renderHistory(){
     document.getElementById('weight-input').value = remote.weightKg;
   }
 })();
+
+try{ Prefs.applyRainbowIfOn(); }catch(e){}
+document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
 </script>
 </body>
 </html>
