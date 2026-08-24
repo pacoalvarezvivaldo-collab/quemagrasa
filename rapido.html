@@ -113,6 +113,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 
 <script src="sync.js"></script>
 <script src="streak.js"></script>
+<script src="prefs.js"></script>
 <script>
 /* =====================================================================
    EJERCICIO RÁPIDO — 10 min cronometrados, 8 ejercicios al azar
@@ -235,7 +236,12 @@ function stopTimer(){
 /* ---------- pantalla encendida mientras corre la sesión ---------- */
 let wakeLock = null;
 async function requestWakeLock(){
-  if('wakeLock' in navigator) try{ wakeLock = await navigator.wakeLock.request('screen'); }catch(e){}
+  if(wakeLock) return;
+  if(window.Prefs && !Prefs.getKeepScreenOn()) return;
+  if('wakeLock' in navigator) try{
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', ()=>{ wakeLock = null; });
+  }catch(e){}
 }
 async function releaseWakeLock(){
   if(wakeLock){ try{ await wakeLock.release(); }catch(e){} wakeLock = null; }
@@ -257,7 +263,8 @@ function tick(){
   if(paused) return;
   const left = Math.max(0, Math.ceil((phaseEndAt-Date.now())/1000));
   if(phase==='rest' && !phaseWarned && left<=10 && left>0){
-    phaseWarned = true; vibrate([90,70,90]); beep(1320,0.1,0.28);
+    phaseWarned = true;
+    if(!window.Prefs || Prefs.getSoundWarningOn()){ vibrate([90,70,90]); beep(1320,0.1,0.28); }
   }
   if(left<=0){
     advancePhase();
@@ -340,6 +347,8 @@ function updateTimer(left){
 /* ---------- init ---------- */
 if(window.QuemaSync) QuemaSync.initSilent(); // sin botón propio: hereda la sesión ya persistida por Supabase, si existe
 ensurePool();
+try{ Prefs.applyRainbowIfOn(); }catch(e){}
+document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
 </script>
 </body>
 </html>

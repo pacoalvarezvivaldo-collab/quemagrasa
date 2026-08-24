@@ -97,6 +97,24 @@ function beep(freq,dur,vol){
   }catch(e){}
 }
 function vibrate(p){ if(navigator.vibrate) try{ navigator.vibrate(p); }catch(e){} }
+
+/* ---------- pantalla encendida durante el ejercicio ---------- */
+let wakeLock = null;
+async function requestWakeLock(){
+  if(wakeLock) return;
+  if(window.Prefs && !Prefs.getKeepScreenOn()) return;
+  if('wakeLock' in navigator) try{
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', ()=>{ wakeLock = null; });
+  }catch(e){}
+}
+async function releaseWakeLock(){
+  if(wakeLock){ try{ await wakeLock.release(); }catch(e){} wakeLock = null; }
+}
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible' && currentSession.length) requestWakeLock();
+});
+
 document.body.addEventListener('touchstart', initAudio, {once:true});
 document.body.addEventListener('click', initAudio, {once:true});
 
@@ -173,6 +191,8 @@ function renderCalendar(){
 
 function backToCalendar(){
   stopRestTimer();
+  releaseWakeLock();
+  currentSession = [];
   renderCalendar();
   showScreen('calendar');
 }
@@ -209,6 +229,7 @@ function openDay(day){
   document.getElementById('upcoming-wrap').style.display = '';
   document.getElementById('player-controls').style.display = 'flex';
   showScreen('player');
+  requestWakeLock();
   maybeShowEgg(day, renderExercise);
 }
 
@@ -325,7 +346,8 @@ function tickRest(){
   if(paused) return;
   restLeft = Math.max(0, Math.ceil((restEndAt-Date.now())/1000));
   if(!restWarned && restLeft<=10 && restLeft>0){
-    restWarned = true; vibrate([90,70,90]); beep(1320,0.1,0.28);
+    restWarned = true;
+    if(!window.Prefs || Prefs.getSoundWarningOn()){ vibrate([90,70,90]); beep(1320,0.1,0.28); }
   }
   if(restLeft<=0){
     stopRestTimer();
@@ -346,6 +368,8 @@ function updateRestUI(){
 function completeSession(){
   COMPLETED.add(currentDay);
   saveCompleted();
+  releaseWakeLock();
+  currentSession = [];
   if(window.Streak) Streak.recordActivity();
   if(CONFIG.onActivityRecorded) CONFIG.onActivityRecorded();
   document.getElementById('complete-day').textContent = currentDay;

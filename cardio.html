@@ -446,6 +446,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 
 <script src="sync.js"></script>
 <script src="streak.js"></script>
+<script src="prefs.js"></script>
 <script>
 /* =====================================================================
    QUEMAGRASA v3
@@ -922,12 +923,14 @@ function setMusicLink(v){
 }
 
 function toggleBgMode(){ bgMode=!bgMode;
+  if(window.Prefs) Prefs.setKeepScreenOn(bgMode);
   document.getElementById('bgmode-row').classList.toggle('on',bgMode);
   if(running){ if(bgMode) startKeepAlive(); else { silentAudio.pause(); releaseWakeLock(); } } }
 function toggleSound(){ soundOn=!soundOn;
   document.getElementById('sound-row').classList.toggle('on',soundOn);
   if(soundOn){ initAudio(); beep(660,0.1,0.2); } }
 function togglePreWarn(){ preWarn=!preWarn;
+  if(window.Prefs) Prefs.setSoundWarningOn(preWarn);
   document.getElementById('prewarn-row').classList.toggle('on',preWarn);
   if(!preWarn) hidePreWarn(); }
 function toggleAdjust(){ adjustOn=!adjustOn;
@@ -1016,6 +1019,17 @@ function syncToggleUI(){
 
 async function loadSettings(){
   const c=await Store.get(KEY_CFG);
+  if(window.Prefs){
+    // migración única: si el usuario ya tenía config guardada de antes de las
+    // preferencias compartidas, su valor previo se hereda en vez de perderse
+    // contra el default de Prefs (que vería las llaves qg_pref_* como "nunca
+    // fijadas" y devolvería true).
+    if(c && typeof c.bgMode==='boolean' && localStorage.getItem('qg_pref_screen')===null) Prefs.setKeepScreenOn(c.bgMode);
+    if(c && typeof c.preWarn==='boolean' && localStorage.getItem('qg_pref_sound')===null) Prefs.setSoundWarningOn(c.preWarn);
+    bgMode = Prefs.getKeepScreenOn(); preWarn = Prefs.getSoundWarningOn();
+  }
+  if(!('wakeLock' in navigator)) bgMode=false;
+  syncToggleUI();
   if(!c) return;
   if(c.machineKey&&MACHINES[c.machineKey]) machineKey=c.machineKey;
   if(c.levelKey&&LEVELS[c.levelKey]) levelKey=c.levelKey;
@@ -1023,17 +1037,15 @@ async function loadSettings(){
   if(c.themeKey&&THEMES[c.themeKey]) themeKey=c.themeKey;
   if(c.userWeight>0) userWeight=c.userWeight;
   if(c.musicLink && /^https?:\/\//i.test(c.musicLink)) musicLink=c.musicLink;
-  ['bgMode','soundOn','preWarn','adjustOn','propagate','gymEnabled'].forEach(k=>{
+  ['soundOn','adjustOn','propagate','gymEnabled'].forEach(k=>{
     if(typeof c[k]==='boolean'){
-      if(k==='bgMode') bgMode=c[k]; if(k==='soundOn') soundOn=c[k];
-      if(k==='preWarn') preWarn=c[k]; if(k==='adjustOn') adjustOn=c[k];
+      if(k==='soundOn') soundOn=c[k]; if(k==='adjustOn') adjustOn=c[k];
       if(k==='propagate') propagate=c[k]; if(k==='gymEnabled') gymEnabled=c[k];
     }
   });
   if(c.maxes) Object.keys(c.maxes).forEach(k=>{
     if(MACHINES[k]){ MACHINES[k].max1=c.maxes[k][0]; MACHINES[k].max2=c.maxes[k][1]; }
   });
-  if(!('wakeLock' in navigator)) bgMode=false;
   document.getElementById('weight-input').value=userWeight;
   document.getElementById('music-input').value=musicLink;
   document.getElementById('music-btn').href=musicLink;
@@ -1141,6 +1153,9 @@ buildPlan(); rebuildTimeline(); refreshHeader(); applyTheme(themeKey); updateUI(
   sessions=(await Store.get(KEY_HIST))||[];
   renderHistory();
 })();
+
+try{ Prefs.applyRainbowIfOn(); }catch(e){}
+document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
 </script>
 </body>
 </html>
