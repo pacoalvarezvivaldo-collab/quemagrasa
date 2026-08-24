@@ -183,6 +183,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 
 <script src="sync.js"></script>
 <script src="streak.js"></script>
+<script src="prefs.js"></script>
 <script src="plan-engine.js"></script>
 <script>
 /* =====================================================================
@@ -213,6 +214,9 @@ const CHAIR_TIP_RE = /bench|banco/i;
     pullRemoteState: async () => (window.QuemaSync && QuemaSync.isSignedIn()) ? await QuemaSync.pullUserState() : null
   });
 })();
+
+try{ Prefs.applyRainbowIfOn(); }catch(e){}
+document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
 </script>
 </body>
 </html>
