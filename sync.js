@@ -90,23 +90,27 @@ function openModal(){
 async function init(buttonEl){
   syncBtn = buttonEl;
   if(!syncBtn) return;
-  const sb = await getClient();
-  if(!sb){ syncBtn.style.display = 'none'; return; } // sin credenciales configuradas: el botón no existe
-  syncBtn.addEventListener('click', openModal);
-  const { data } = await sb.auth.getSession();
-  session = data.session;
-  renderBtn();
-  sb.auth.onAuthStateChange((_event, s)=>{ session = s; renderBtn(); });
+  try{
+    const sb = await getClient();
+    if(!sb){ syncBtn.style.display = 'none'; return; } // sin credenciales configuradas: el botón no existe
+    syncBtn.addEventListener('click', openModal);
+    const { data } = await sb.auth.getSession();
+    session = data.session;
+    renderBtn();
+    sb.auth.onAuthStateChange((_event, s)=>{ session = s; renderBtn(); });
+  }catch(e){ syncBtn.style.display = 'none'; } // offline/red caída: la página sigue 100% local
 }
 
 /* páginas sin botón propio (Gimnasio, Progreso/Racha): heredan la sesión ya
    persistida por el cliente de Supabase en localStorage, sin UI de login. */
 async function initSilent(){
-  const sb = await getClient();
-  if(!sb) return;
-  const { data } = await sb.auth.getSession();
-  session = data.session;
-  sb.auth.onAuthStateChange((_event, s)=>{ session = s; if(syncBtn) renderBtn(); });
+  try{
+    const sb = await getClient();
+    if(!sb) return;
+    const { data } = await sb.auth.getSession();
+    session = data.session;
+    sb.auth.onAuthStateChange((_event, s)=>{ session = s; if(syncBtn) renderBtn(); });
+  }catch(e){ /* offline/red caída: la página sigue 100% local */ }
 }
 
 function isSignedIn(){ return !!session; }
@@ -114,9 +118,9 @@ function isSignedIn(){ return !!session; }
 /* ---------- run_history ---------- */
 async function pushRun(entry){
   if(!session) return;
-  const sb = await getClient();
-  if(!sb) return;
   try{
+    const sb = await getClient();
+    if(!sb) return;
     await sb.from('run_history').insert({
       user_id: session.user.id, date: new Date(entry.date).toISOString(), mode: entry.mode,
       distance_m: entry.distanceM, elapsed_s: entry.elapsedS, steps: entry.steps, kcal: entry.kcal
@@ -126,9 +130,9 @@ async function pushRun(entry){
 
 async function pullAndMergeHistory(localHistory){
   if(!session) return localHistory;
-  const sb = await getClient();
-  if(!sb) return localHistory;
   try{
+    const sb = await getClient();
+    if(!sb) return localHistory;
     const { data, error } = await sb.from('run_history').select('*').eq('user_id', session.user.id);
     if(error || !data) return localHistory;
     const { merged, toUpload } = mergeHistory(localHistory, data);
@@ -140,18 +144,21 @@ async function pullAndMergeHistory(localHistory){
 /* ---------- weight_log ---------- */
 async function pushWeightEntry(entry){
   if(!session) return;
-  const sb = await getClient();
-  if(!sb) return;
   try{
-    await sb.from('weight_log').insert({ user_id: session.user.id, date: entry.date, weight_kg: entry.weightKg });
+    const sb = await getClient();
+    if(!sb) return;
+    await sb.from('weight_log').upsert(
+      { user_id: session.user.id, date: entry.date, weight_kg: entry.weightKg },
+      { onConflict: 'user_id,date' }
+    );
   }catch(e){ /* offline: el dato ya quedó guardado en local, se reintenta en el próximo push */ }
 }
 
 async function pullAndMergeWeightLog(localLog){
   if(!session) return localLog;
-  const sb = await getClient();
-  if(!sb) return localLog;
   try{
+    const sb = await getClient();
+    if(!sb) return localLog;
     const { data, error } = await sb.from('weight_log').select('*').eq('user_id', session.user.id);
     if(error || !data) return localLog;
     const { merged, toUpload } = mergeWeightLog(localLog, data);
@@ -163,18 +170,18 @@ async function pullAndMergeWeightLog(localLog){
 /* ---------- user_state ---------- */
 async function pushUserState(partial){
   if(!session) return;
-  const sb = await getClient();
-  if(!sb) return;
   try{
+    const sb = await getClient();
+    if(!sb) return;
     await sb.from('user_state').upsert({ user_id: session.user.id, updated_at:new Date().toISOString(), ...partial });
   }catch(e){ /* offline: se reintenta en el próximo guardado */ }
 }
 
 async function pullUserState(){
   if(!session) return null;
-  const sb = await getClient();
-  if(!sb) return null;
   try{
+    const sb = await getClient();
+    if(!sb) return null;
     const { data, error } = await sb.from('user_state').select('*').eq('user_id', session.user.id).maybeSingle();
     if(error || !data) return null;
     return {

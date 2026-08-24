@@ -35,7 +35,8 @@ create table weight_log (
   user_id uuid not null references auth.users(id) default auth.uid(),
   date date not null,
   weight_kg numeric not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (user_id, date)
 );
 
 alter table run_history enable row level security;
@@ -50,3 +51,9 @@ create policy "own row only" on user_state
 
 create policy "own rows only" on weight_log
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Migración si weight_log ya existía sin el unique(user_id, date): borra
+-- duplicados por fecha (deja el más reciente) y agrega la constraint.
+-- delete from weight_log a using weight_log b
+--   where a.user_id = b.user_id and a.date = b.date and a.id < b.id;
+-- alter table weight_log add constraint weight_log_user_id_date_key unique (user_id, date);

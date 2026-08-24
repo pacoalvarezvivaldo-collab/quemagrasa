@@ -241,7 +241,10 @@ function saveWeight(v){
   if(!isNaN(n) && n>=30 && n<=300){
     userWeight = n;
     if(window.WeightLog) WeightLog.saveTodayWeight(n);
-    if(window.QuemaSync) QuemaSync.pushUserState({ weight_kg: n });
+    if(window.QuemaSync){
+      QuemaSync.pushUserState({ weight_kg: n });
+      QuemaSync.pushWeightEntry({ date: window.WeightLog ? WeightLog.todayStr() : new Date().toISOString().slice(0,10), weightKg: n });
+    }
   }
 }
 function loadWeight(){ const v = window.WeightLog ? WeightLog.getLatestWeight() : null; return (v>=30 && v<=300)?v:70; }

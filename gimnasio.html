@@ -188,8 +188,9 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
    pero initSilent() hereda esa sesión (ya persistida en localStorage por el
    cliente de Supabase) antes de que PlanEngine intente jalar el estado remoto. */
 (async function(){
+try{
 if(window.QuemaSync) await QuemaSync.initSilent();
-PlanEngine.init({
+await PlanEngine.init({
   equipmentUrls: [
     'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/band.json',
     'https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/barbell.json',
@@ -214,6 +215,7 @@ PlanEngine.init({
     return { level: remote.gymLevel, currentDay: remote.gymCurrentDay, completedDays: remote.gymCompletedDays };
   }
 });
+}catch(e){ console.error('Gimnasio init falló:', e); }
 })();
 </script>
 </body>

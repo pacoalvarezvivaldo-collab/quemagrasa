@@ -438,15 +438,26 @@ async function syncPullOnLoad(){
   if(!window.QuemaSync) return;
   await QuemaSync.initSilent(); // sin botón propio: hereda la sesión ya persistida por Supabase, si existe
   if(!QuemaSync.isSignedIn()) return;
+
+  // snapshots de antes de la red: si el usuario edita algo mientras esperamos,
+  // no lo pisamos con la respuesta remota (que quedó desactualizada) — se sincroniza sola en la próxima carga
+  const heightBefore = WeightLog.getHeightCm();
+  const goalBefore = WeightLog.getGoal();
+  const logBefore = WeightLog.getLog();
+
   const remote = await QuemaSync.pullUserState();
   if(remote){
-    if(remote.heightCm != null) WeightLog.saveHeightCm(remote.heightCm);
-    if(remote.goalWeightKg != null && remote.goalDate) WeightLog.saveGoal(remote.goalWeightKg, remote.goalDate);
-    else WeightLog.clearGoal(); // el remoto es la fuente de verdad de la meta: si allá ya no hay meta, se limpia aquí también
+    if(remote.heightCm != null && WeightLog.getHeightCm() === heightBefore) WeightLog.saveHeightCm(remote.heightCm);
+    const goalNow = WeightLog.getGoal();
+    const goalKey = g => g ? `${g.weightKg}|${g.date}` : null;
+    if(goalKey(goalNow) === goalKey(goalBefore)){
+      if(remote.goalWeightKg != null && remote.goalDate) WeightLog.saveGoal(remote.goalWeightKg, remote.goalDate);
+      else WeightLog.clearGoal(); // el remoto es la fuente de verdad de la meta: si allá ya no hay meta, se limpia aquí también
+    }
     if(remote.activityLog && remote.activityLog.length) Streak.mergeRemoteLog(remote.activityLog);
   }
-  const mergedWeightLog = await QuemaSync.pullAndMergeWeightLog(WeightLog.getLog());
-  WeightLog.mergeRemoteLog(mergedWeightLog);
+  const mergedWeightLog = await QuemaSync.pullAndMergeWeightLog(logBefore);
+  if(JSON.stringify(WeightLog.getLog()) === JSON.stringify(logBefore)) WeightLog.mergeRemoteLog(mergedWeightLog);
   await QuemaSync.pushUserState({ activity_log: Streak.getLog() });
   renderProgress();
   renderStreak();

@@ -368,7 +368,7 @@ async function init(config){
       if(remote.level){ LEVEL_KEY = remote.level; try{ localStorage.setItem(CONFIG.keyPrefix+'level', LEVEL_KEY); }catch(e){} }
       if(remote.currentDay != null){ CURRENT_DAY_SAVED = remote.currentDay; try{ localStorage.setItem(CONFIG.keyPrefix+'current', String(remote.currentDay)); }catch(e){} }
       if(remote.completedDays && remote.completedDays.length){
-        COMPLETED = new Set(remote.completedDays);
+        remote.completedDays.forEach(d=>COMPLETED.add(d)); // unión, nunca se pierde un día completado localmente que aún no llegó a empujarse
         try{ localStorage.setItem(CONFIG.keyPrefix+'completed', JSON.stringify([...COMPLETED])); }catch(e){}
       }
     }
