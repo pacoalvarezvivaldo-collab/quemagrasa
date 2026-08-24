@@ -1019,6 +1019,16 @@ function syncToggleUI(){
 
 async function loadSettings(){
   const c=await Store.get(KEY_CFG);
+  if(window.Prefs){
+    // migración única: si el usuario ya tenía config guardada de antes de las
+    // preferencias compartidas, su valor previo se hereda en vez de perderse
+    // contra el default de Prefs (que vería las llaves qg_pref_* como "nunca
+    // fijadas" y devolvería true).
+    if(c && typeof c.bgMode==='boolean' && localStorage.getItem('qg_pref_screen')===null) Prefs.setKeepScreenOn(c.bgMode);
+    if(c && typeof c.preWarn==='boolean' && localStorage.getItem('qg_pref_sound')===null) Prefs.setSoundWarningOn(c.preWarn);
+    bgMode = Prefs.getKeepScreenOn(); preWarn = Prefs.getSoundWarningOn();
+  }
+  if(!('wakeLock' in navigator)) bgMode=false;
   if(!c) return;
   if(c.machineKey&&MACHINES[c.machineKey]) machineKey=c.machineKey;
   if(c.levelKey&&LEVELS[c.levelKey]) levelKey=c.levelKey;
@@ -1032,11 +1042,9 @@ async function loadSettings(){
       if(k==='propagate') propagate=c[k]; if(k==='gymEnabled') gymEnabled=c[k];
     }
   });
-  if(window.Prefs){ bgMode = Prefs.getKeepScreenOn(); preWarn = Prefs.getSoundWarningOn(); }
   if(c.maxes) Object.keys(c.maxes).forEach(k=>{
     if(MACHINES[k]){ MACHINES[k].max1=c.maxes[k][0]; MACHINES[k].max2=c.maxes[k][1]; }
   });
-  if(!('wakeLock' in navigator)) bgMode=false;
   document.getElementById('weight-input').value=userWeight;
   document.getElementById('music-input').value=musicLink;
   document.getElementById('music-btn').href=musicLink;
