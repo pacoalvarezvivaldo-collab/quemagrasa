@@ -1029,6 +1029,7 @@ async function loadSettings(){
     bgMode = Prefs.getKeepScreenOn(); preWarn = Prefs.getSoundWarningOn();
   }
   if(!('wakeLock' in navigator)) bgMode=false;
+  syncToggleUI();
   if(!c) return;
   if(c.machineKey&&MACHINES[c.machineKey]) machineKey=c.machineKey;
   if(c.levelKey&&LEVELS[c.levelKey]) levelKey=c.levelKey;
