@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ajustes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d0d0f">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
+<title>Ajustes · Quemagrasa</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+:root {
+  --bg:#0d0d0f; --surface:#18181c; --surface2:#222228;
+  --border:rgba(255,255,255,0.08); --text:#f0efe8; --muted:#777;
+  --accent:#EF9F27; --accent-text:#000;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+html, body { height:100%; background:var(--bg); overscroll-behavior:none; }
+body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-top);
+  -webkit-user-select:none; user-select:none; touch-action:manipulation; }
+
+.topbar { display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px 9px 18px; border-bottom:1px solid var(--border); }
+.topbar-title { font-size:13px; font-weight:800; letter-spacing:.03em; }
+.gear-btn { background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  width:34px; height:34px; border-radius:10px; font-size:15px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; text-decoration:none;
+  -webkit-tap-highlight-color:transparent; }
+
+.wrap { max-width:480px; margin:0 auto; padding:20px calc(20px + env(safe-area-inset-right,0px)) calc(24px + var(--safe-bot)); }
+
+.set-group { margin-bottom:18px; }
+.set-label { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+
+.toggle-row.disabled { opacity:.45; pointer-events:none; }
+.toggle-row { display:flex; align-items:center; justify-content:space-between; background:var(--surface2);
+  border:1px solid var(--border); border-radius:12px; padding:11px 14px; cursor:pointer;
+  -webkit-tap-highlight-color:transparent; margin-bottom:7px; gap:10px; }
+.toggle-txt { font-size:12.5px; font-weight:700; }
+.toggle-sub { font-size:10px; color:var(--muted); font-weight:400; display:block; margin-top:2px; }
+.toggle-sw { width:44px; height:25px; border-radius:20px; background:var(--border); position:relative; transition:background .2s; flex-shrink:0; }
+.toggle-sw::after { content:""; position:absolute; top:3px; left:3px; width:19px; height:19px; border-radius:50%;
+  background:var(--text); transition:transform .2s; }
+.toggle-row.on .toggle-sw { background:var(--accent); }
+.toggle-row.on .toggle-sw::after { transform:translateX(19px); }
+
+.rainbow-note { font-size:12.5px; color:var(--muted); background:var(--surface2); border-radius:12px; padding:12px 14px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="gear-btn" href="index.html" title="Volver al inicio">←</a>
+  <span class="topbar-title">⚙️ Ajustes</span>
+  <span style="width:34px"></span>
+</div>
+
+<div class="wrap">
+  <div class="set-group">
+    <div class="set-label">Sonido y pantalla</div>
+    <div class="toggle-row" id="sound-row" onclick="toggleSound()">
+      <span class="toggle-txt">Aviso de siguiente ejercicio
+        <span class="toggle-sub">Beep + vibración 10s antes de que acabe el descanso</span></span>
+      <span class="toggle-sw"></span>
+    </div>
+    <div class="toggle-row" id="screen-row" onclick="toggleScreen()">
+      <span class="toggle-txt">Mantener pantalla encendida
+        <span class="toggle-sub">Evita que el celular se bloquee mientras entrenas</span></span>
+      <span class="toggle-sw"></span>
+    </div>
+    <div class="toggle-row" id="fullscreen-row" onclick="toggleFullscreen()">
+      <span class="toggle-txt">Pantalla completa
+        <span class="toggle-sub">Oculta la barra del navegador — se re-activa sola al tocar</span></span>
+      <span class="toggle-sw"></span>
+    </div>
+  </div>
+
+  <div class="set-group">
+    <div class="set-label">Color</div>
+    <div id="rainbow-box"></div>
+  </div>
+</div>
+
+<script src="prefs.js"></script>
+<script>
+/* =====================================================================
+   ajustes.html — pantalla centralizada de preferencias de interfaz.
+   Lee y escribe directo en prefs.js, sin lógica propia de negocio.
+   Ver docs/superpowers/specs/2026-08-24-ajustes-design.md
+   ===================================================================== */
+
+function syncToggleUI(){
+  document.getElementById('sound-row').classList.toggle('on', Prefs.getSoundWarningOn());
+  document.getElementById('screen-row').classList.toggle('on', Prefs.getKeepScreenOn());
+  document.getElementById('fullscreen-row').classList.toggle('on', Prefs.getFullscreenPref());
+  if(!('wakeLock' in navigator)){
+    document.getElementById('screen-row').classList.add('disabled');
+  }
+  if(!document.documentElement.requestFullscreen){
+    document.getElementById('fullscreen-row').classList.add('disabled');
+  }
+}
+
+function toggleSound(){ Prefs.setSoundWarningOn(!Prefs.getSoundWarningOn()); syncToggleUI(); }
+function toggleScreen(){ Prefs.setKeepScreenOn(!Prefs.getKeepScreenOn()); syncToggleUI(); }
+function toggleFullscreen(){
+  const next = !Prefs.getFullscreenPref();
+  Prefs.setFullscreenPref(next);
+  syncToggleUI();
+  if(next) Prefs.maybeRequestFullscreen(); // el toque en este mismo botón cuenta como gesto del usuario
+}
+
+function renderRainbowBox(){
+  const box = document.getElementById('rainbow-box');
+  if(!Prefs.hasRainbowBeenDiscovered()){
+    box.innerHTML = '<div class="rainbow-note">🔒 Hay un modo de color secreto por descubrir en Inicio</div>';
+    return;
+  }
+  box.innerHTML = `<div class="toggle-row on" id="rainbow-row" onclick="toggleRainbowMode()">
+    <span class="toggle-txt">🌈 Modo arcoíris</span>
+    <span class="toggle-sw"></span>
+  </div>`;
+  document.getElementById('rainbow-row').classList.toggle('on', Prefs.isRainbowOn());
+}
+function toggleRainbowMode(){
+  Prefs.setRainbowOn(!Prefs.isRainbowOn());
+  renderRainbowBox();
+}
+
+syncToggleUI();
+renderRainbowBox();
+try{ Prefs.applyRainbowIfOn(); }catch(e){}
+document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
+</script>
+</body>
+</html>
