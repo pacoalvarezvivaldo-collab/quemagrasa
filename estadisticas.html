@@ -92,6 +92,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 </div>
 
 <script src="streak.js"></script>
+<script src="prefs.js"></script>
 <script>
 /* =====================================================================
    estadisticas.html — vista de solo lectura: junta totales de los 5
@@ -172,6 +173,8 @@ renderCorrer();
 renderCardio();
 renderPlan('ent_', 'casa-level', 'casa-days');
 renderPlan('gym_', 'gimnasio-level', 'gimnasio-days');
+try{ Prefs.applyRainbowIfOn(); }catch(e){}
+document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
 </script>
 </body>
 </html>
