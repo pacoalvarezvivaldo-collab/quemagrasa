@@ -198,6 +198,11 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
       <span class="mode-text"><span class="mode-name">Estadísticas</span><span class="mode-sub">Totales de los 5 modos</span></span>
       <span class="mode-chevron">›</span>
     </a>
+    <a class="mode-row" href="ajustes.html">
+      <span class="mode-icon">⚙️</span>
+      <span class="mode-text"><span class="mode-name">Ajustes</span><span class="mode-sub">Sonido, pantalla, color</span></span>
+      <span class="mode-chevron">›</span>
+    </a>
   </div>
 </div>
 
@@ -231,6 +236,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <script src="sync.js"></script>
 <script src="weight-log.js"></script>
 <script src="streak.js"></script>
+<script src="prefs.js"></script>
 <script>
 /* ---------- Tu progreso: peso, estatura, meta, IMC ---------- */
 let progressOpen = false;
@@ -529,28 +535,10 @@ document.getElementById('flame').addEventListener('click', ()=>{
   }
 });
 
-/* easter egg oculto: tocar las 6 zonas invisibles en orden (izquierda a derecha) alterna "modo arcoíris" */
-const KEY_RAINBOW = 'qg_rainbow';
-let rainbowExpected = 0, rainbowResetTimer = null, rainbowInterval = null, rainbowHue = 0;
-
-function applyRainbowHue(){
-  document.documentElement.style.setProperty('--accent', `hsl(${rainbowHue}, 85%, 55%)`);
-  rainbowHue = (rainbowHue + 6) % 360;
-}
-function startRainbow(){
-  clearInterval(rainbowInterval);
-  applyRainbowHue();
-  rainbowInterval = setInterval(applyRainbowHue, 150);
-}
-function stopRainbow(){
-  clearInterval(rainbowInterval);
-  rainbowInterval = null;
-  document.documentElement.style.removeProperty('--accent');
-}
-function toggleRainbow(){
-  if(rainbowInterval){ stopRainbow(); try{ localStorage.removeItem(KEY_RAINBOW); }catch(e){} }
-  else{ startRainbow(); try{ localStorage.setItem(KEY_RAINBOW,'1'); }catch(e){} }
-}
+/* easter egg oculto: tocar las 6 zonas invisibles en orden (izquierda a derecha) alterna "modo arcoíris".
+   El efecto de color (el ciclo en sí) vive en prefs.js, compartido con las demás páginas —
+   aquí solo queda el mecanismo secreto de descubrimiento. */
+let rainbowExpected = 0, rainbowResetTimer = null;
 
 document.querySelectorAll('.rainbow-zone').forEach(zone=>{
   zone.addEventListener('click', ()=>{
@@ -560,7 +548,7 @@ document.querySelectorAll('.rainbow-zone').forEach(zone=>{
       rainbowExpected++;
       if(rainbowExpected >= 6){
         rainbowExpected = 0;
-        toggleRainbow();
+        Prefs.setRainbowOn(!Prefs.isRainbowOn());
         return;
       }
       rainbowResetTimer = setTimeout(()=>{ rainbowExpected = 0; }, 4000);
@@ -571,7 +559,9 @@ document.querySelectorAll('.rainbow-zone').forEach(zone=>{
   });
 });
 
-try{ if(localStorage.getItem(KEY_RAINBOW)==='1') startRainbow(); }catch(e){}
+try{ Prefs.applyRainbowIfOn(); }catch(e){}
+
+document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
 
 /* toque en zona vacía (fuera de botones/links/zonas ocultas): ripple ambient, sin acción */
 document.addEventListener('click', e=>{
