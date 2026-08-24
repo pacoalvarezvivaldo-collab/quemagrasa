@@ -347,6 +347,7 @@ function completeSession(){
   COMPLETED.add(currentDay);
   saveCompleted();
   if(window.Streak) Streak.recordActivity();
+  if(CONFIG.onActivityRecorded) CONFIG.onActivityRecorded();
   document.getElementById('complete-day').textContent = currentDay;
   showScreen('complete');
 }
@@ -355,7 +356,7 @@ function completeSession(){
 async function init(config){
   CONFIG = Object.assign({
     keyPrefix:'', equipmentUrls:[], excludeExercise:null, chairTip:null,
-    onSaveLevel:null, onSaveCompleted:null, onSaveCurrentDay:null, pullRemoteState:null
+    onSaveLevel:null, onSaveCompleted:null, onSaveCurrentDay:null, onActivityRecorded:null, pullRemoteState:null
   }, config);
 
   LEVEL_KEY = loadLevel();

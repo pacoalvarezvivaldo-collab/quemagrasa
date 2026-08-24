@@ -209,6 +209,7 @@ const CHAIR_TIP_RE = /bench|banco/i;
     onSaveLevel: level => { if(window.QuemaSync) QuemaSync.pushUserState({ plan_level: level }); },
     onSaveCompleted: days => { if(window.QuemaSync) QuemaSync.pushUserState({ plan_completed_days: days }); },
     onSaveCurrentDay: day => { if(window.QuemaSync) QuemaSync.pushUserState({ plan_current_day: day }); },
+    onActivityRecorded: () => { if(window.QuemaSync && QuemaSync.isSignedIn() && window.Streak) QuemaSync.pushUserState({ activity_log: Streak.getLog() }); },
     pullRemoteState: async () => (window.QuemaSync && QuemaSync.isSignedIn()) ? await QuemaSync.pullUserState() : null
   });
 })();

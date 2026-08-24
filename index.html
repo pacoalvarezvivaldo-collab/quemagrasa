@@ -99,6 +99,15 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 .progress-bmi { display:none; align-items:center; gap:8px; font-family:'Space Mono',monospace;
   font-size:13px; background:var(--surface2); border-radius:10px; padding:9px 12px; }
 .progress-bmi .bmi-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+/* ---- onboarding: pedir peso/estatura una sola vez al abrir la app ---- */
+.onboard-overlay { position:fixed; inset:0; background:rgba(0,0,0,.72); display:flex; align-items:center;
+  justify-content:center; z-index:600; opacity:0; pointer-events:none; transition:opacity .2s; padding:20px; }
+.onboard-overlay.show { opacity:1; pointer-events:all; }
+.onboard-box { background:var(--surface); border:1.5px solid var(--border); border-radius:16px;
+  padding:20px; max-width:340px; width:100%; }
+.onboard-title { font-size:17px; font-weight:800; margin-bottom:6px; }
+.onboard-sub { font-size:12.5px; color:var(--muted); margin-bottom:16px; line-height:1.4; }
 </style>
 </head>
 <body>
@@ -192,6 +201,19 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   </div>
 </div>
 
+<div class="onboard-overlay" id="onboard-overlay">
+  <div class="onboard-box">
+    <div class="onboard-title">📊 Antes de empezar</div>
+    <div class="onboard-sub">Registra tu peso y estatura para ver tu progreso e IMC. Si no los tienes a la mano, puedes hacerlo después.</div>
+    <label class="field-label">Peso (kg)</label>
+    <input class="field-input" id="onboard-weight" type="number" inputmode="decimal" min="30" max="300" step="0.1" placeholder="70.0">
+    <label class="field-label">Estatura (cm)</label>
+    <input class="field-input" id="onboard-height" type="number" inputmode="numeric" min="100" max="250" placeholder="170">
+    <button class="progress-btn" onclick="saveOnboardEntry()">Guardar</button>
+    <button class="progress-btn-secondary" onclick="skipOnboarding()">Tal vez después</button>
+  </div>
+</div>
+
 <div class="egg-overlay" id="egg-overlay">
   <div>
     <div class="egg-big" id="egg-big"></div>
@@ -224,7 +246,7 @@ function saveFirstEntry(){
   const h = parseFloat(document.getElementById('progress-first-height').value);
   if(isNaN(w) || w<30 || w>300 || isNaN(h) || h<100 || h>250){
     alert('Ingresa un peso (30-300 kg) y estatura (100-250 cm) válidos.');
-    return;
+    return false;
   }
   WeightLog.saveTodayWeight(w);
   WeightLog.saveHeightCm(h);
@@ -233,6 +255,28 @@ function saveFirstEntry(){
     QuemaSync.pushUserState({ height_cm: h });
   }
   renderProgress();
+  return true;
+}
+
+/* ---------- onboarding: pedir peso/estatura una sola vez ---------- */
+const KEY_ONBOARD_SEEN = 'qg_onboard_seen';
+function closeOnboarding(){
+  try{ localStorage.setItem(KEY_ONBOARD_SEEN, '1'); }catch(e){}
+  document.getElementById('onboard-overlay').classList.remove('show');
+}
+function skipOnboarding(){ closeOnboarding(); }
+function saveOnboardEntry(){
+  document.getElementById('progress-first-weight').value = document.getElementById('onboard-weight').value;
+  document.getElementById('progress-first-height').value = document.getElementById('onboard-height').value;
+  if(saveFirstEntry() === false) return; // datos inválidos: deja el modal abierto para corregir
+  closeOnboarding();
+}
+function maybeShowOnboarding(){
+  try{
+    if(localStorage.getItem(KEY_ONBOARD_SEEN)) return;
+    if(WeightLog.getLog().length){ localStorage.setItem(KEY_ONBOARD_SEEN, '1'); return; } // ya tenía datos de antes de este onboarding
+  }catch(e){ return; }
+  document.getElementById('onboard-overlay').classList.add('show');
 }
 
 function saveTodayEntry(){
@@ -418,6 +462,7 @@ function renderSummary(log){
 }
 
 try{ renderProgress(); }catch(e){}
+try{ maybeShowOnboarding(); }catch(e){}
 
 function renderStreak(){
   const el = document.getElementById('hero-streak');

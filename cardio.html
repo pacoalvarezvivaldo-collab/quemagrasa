@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Cardio">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d0d0f">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://esm.sh; img-src 'self' data:; media-src 'self' data:; connect-src https://*.supabase.co; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
 <title>Cardio HIIT · Quemagrasa</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
@@ -444,6 +444,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
   <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=" type="audio/wav">
 </audio>
 
+<script src="sync.js"></script>
 <script src="streak.js"></script>
 <script>
 /* =====================================================================
@@ -1099,6 +1100,7 @@ async function recordSession(){
   try{ await Store.set(KEY_HIST,sessions); }catch(e){}
   renderHistory();
   if(window.Streak) Streak.recordActivity();
+  if(window.QuemaSync && QuemaSync.isSignedIn() && window.Streak) QuemaSync.pushUserState({ activity_log: Streak.getLog() });
   const st=computeStreak();
   if(st>1){
     const el=document.getElementById('finish-sub');
@@ -1124,6 +1126,7 @@ if(!('wakeLock' in navigator)){
 /* ---------- init ---------- */
 buildPlan(); rebuildTimeline(); refreshHeader(); applyTheme(themeKey); updateUI();
 (async()=>{
+  if(window.QuemaSync) await QuemaSync.initSilent(); // sin botón propio: hereda la sesión ya persistida por Supabase, si existe
   await loadSettings();
   const urlMachine = new URLSearchParams(location.search).get('m');
   if(urlMachine && MACHINES[urlMachine]){

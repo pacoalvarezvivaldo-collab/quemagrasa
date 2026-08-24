@@ -468,7 +468,10 @@ function stopTracking(){
   const entry = { date: Date.now(), mode, distanceM, elapsedS, steps, kcal };
   saveHistoryEntry(entry);
   if(window.Streak) Streak.recordActivity();
-  if(window.QuemaSync) QuemaSync.pushRun(entry);
+  if(window.QuemaSync){
+    QuemaSync.pushRun(entry);
+    if(QuemaSync.isSignedIn() && window.Streak) QuemaSync.pushUserState({ activity_log: Streak.getLog() });
+  }
 
   document.getElementById('sum-dist').textContent = (distanceM/1000).toFixed(2) + ' km';
   document.getElementById('sum-time').textContent = fmtTime(elapsedS);

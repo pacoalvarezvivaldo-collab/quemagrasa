@@ -208,6 +208,7 @@ await PlanEngine.init({
   onSaveLevel: level => { if(window.QuemaSync) QuemaSync.pushUserState({ gym_level: level }); },
   onSaveCompleted: days => { if(window.QuemaSync) QuemaSync.pushUserState({ gym_completed_days: days }); },
   onSaveCurrentDay: day => { if(window.QuemaSync) QuemaSync.pushUserState({ gym_current_day: day }); },
+  onActivityRecorded: () => { if(window.QuemaSync && QuemaSync.isSignedIn() && window.Streak) QuemaSync.pushUserState({ activity_log: Streak.getLog() }); },
   pullRemoteState: async () => {
     if(!(window.QuemaSync && QuemaSync.isSignedIn())) return null;
     const remote = await QuemaSync.pullUserState();

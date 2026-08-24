@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Rápido">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d0d0f">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.jsdelivr.net; connect-src https://cdn.jsdelivr.net; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://esm.sh; img-src 'self' data: https://cdn.jsdelivr.net; connect-src https://cdn.jsdelivr.net https://*.supabase.co; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
 <title>Ejercicio rápido · 10 min</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
@@ -111,6 +111,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   </div>
 </div>
 
+<script src="sync.js"></script>
 <script src="streak.js"></script>
 <script>
 /* =====================================================================
@@ -292,6 +293,7 @@ function finishSession(){
   vibrate([300,100,300,100,600]);
   beep(523,0.15,0.3); setTimeout(()=>beep(659,0.15,0.3),160); setTimeout(()=>beep(784,0.35,0.3),330);
   if(window.Streak) Streak.recordActivity();
+  if(window.QuemaSync && QuemaSync.isSignedIn() && window.Streak) QuemaSync.pushUserState({ activity_log: Streak.getLog() });
   document.getElementById('complete-sub').textContent = `${session.length} ejercicios hechos. Buen trabajo.`;
   showScreen('complete');
 }
@@ -336,6 +338,7 @@ function updateTimer(left){
 }
 
 /* ---------- init ---------- */
+if(window.QuemaSync) QuemaSync.initSilent(); // sin botón propio: hereda la sesión ya persistida por Supabase, si existe
 ensurePool();
 </script>
 </body>
