@@ -103,7 +103,10 @@ let wakeLock = null;
 async function requestWakeLock(){
   if(wakeLock) return;
   if(window.Prefs && !Prefs.getKeepScreenOn()) return;
-  if('wakeLock' in navigator) try{ wakeLock = await navigator.wakeLock.request('screen'); }catch(e){}
+  if('wakeLock' in navigator) try{
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', ()=>{ wakeLock = null; });
+  }catch(e){}
 }
 async function releaseWakeLock(){
   if(wakeLock){ try{ await wakeLock.release(); }catch(e){} wakeLock = null; }
@@ -189,6 +192,7 @@ function renderCalendar(){
 function backToCalendar(){
   stopRestTimer();
   releaseWakeLock();
+  currentSession = [];
   renderCalendar();
   showScreen('calendar');
 }
@@ -365,6 +369,7 @@ function completeSession(){
   COMPLETED.add(currentDay);
   saveCompleted();
   releaseWakeLock();
+  currentSession = [];
   if(window.Streak) Streak.recordActivity();
   if(CONFIG.onActivityRecorded) CONFIG.onActivityRecorded();
   document.getElementById('complete-day').textContent = currentDay;
