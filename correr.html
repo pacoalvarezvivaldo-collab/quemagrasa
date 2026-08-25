@@ -336,14 +336,21 @@ function stepsFor(distM){ return Math.round(distM / STRIDE_M[mode]); }
 function kcalFor(elapsedS){ return Math.round(MET[mode]*3.5*userWeight/200/60 * elapsedS); }
 
 /* ---------- mapa ---------- */
+function accentColor(){
+  try{
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    return v || '#EF9F27';
+  }catch(e){ return '#EF9F27'; }
+}
 function initMap(center){
   if(map){ try{ map.remove(); }catch(e){} map = null; routeLine = null; userMarker = null; }
   map = L.map('map', { zoomControl:false, attributionControl:true }).setView([center.lat, center.lng], 17);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(map);
-  routeLine = L.polyline([], { color:'#EF9F27', weight:5 }).addTo(map);
-  userMarker = L.circleMarker([center.lat,center.lng], { radius:8, color:'#EF9F27', fillColor:'#EF9F27', fillOpacity:1, weight:2 }).addTo(map);
+  const ac = accentColor();
+  routeLine = L.polyline([], { color:ac, weight:5 }).addTo(map);
+  userMarker = L.circleMarker([center.lat,center.lng], { radius:8, color:ac, fillColor:ac, fillOpacity:1, weight:2 }).addTo(map);
 }
 function panMapTo(point){
   if(!map) return;
@@ -500,7 +507,7 @@ function renderSummaryMap(){
     maxZoom: 19, attribution: '&copy; OpenStreetMap'
   }).addTo(summaryMap);
   const latlngs = points.map(p=>[p.lat,p.lng]);
-  const line = L.polyline(latlngs, { color:'#EF9F27', weight:5 }).addTo(summaryMap);
+  const line = L.polyline(latlngs, { color:accentColor(), weight:5 }).addTo(summaryMap);
   const sMapRef = summaryMap;
   setTimeout(()=>{ if(sMapRef===summaryMap){ sMapRef.invalidateSize(); sMapRef.fitBounds(line.getBounds(), { padding:[20,20] }); } }, 60);
 }
