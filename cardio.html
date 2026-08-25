@@ -1031,6 +1031,7 @@ async function loadSettings(){
   }
   if(!('wakeLock' in navigator)) bgMode=false;
   syncToggleUI();
+  applyTheme(themeKey);
   if(!c) return;
   if(c.machineKey&&MACHINES[c.machineKey]) machineKey=c.machineKey;
   if(c.levelKey&&LEVELS[c.levelKey]) levelKey=c.levelKey;
