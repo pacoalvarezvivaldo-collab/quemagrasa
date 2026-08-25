@@ -200,21 +200,34 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
    slugs/nombres reales del catálogo, no en suposiciones. */
 const NO_EQUIPMENT_RE = /ball|balon|balón|pelota|medicine|swiss|estabilidad|stability|barbell|ez-bar|\bbars?\b|barra|pull-up|pullup|chin-up|chinup|muscle-up|muscleup|hanging|colgad|dominad|dip-cage|jaula de dominadas|captains-chair|silla del capitan|silla del capitán|ring-dips|anillas|roller|rodillo|rueda|wheel|rope|cuerda|strap|correa|towel|toalla|weighted|\bband\b|banda|liga\b|resistance|resistencia|mancuerna|dumbbell|kettlebell|m[aá]quina|machine|cable|trx|plate|disco|chair|silla|suspend/i;
 const CHAIR_TIP_RE = /bench|banco/i;
-/* El catálogo etiqueta estos como "bodyweight" pero el GIF real usa liga/correa (tibial
-   posterior, peroneos), requiere ayuda de otra persona (assisted-*-stretch de dos figuras), o
-   es una máquina de curl femoral nórdico/GHR — revisado a mano viendo cada imagen. */
+/* El catálogo etiqueta estos como "bodyweight" pero la imagen real muestra liga/correa, una
+   máquina, una barra/rack fijo, o requiere ayuda de otra persona — auditado a mano viendo las
+   458 imágenes del catálogo (ver docs/CATALOGO_SIN_EQUIPO.md para el detalle de cada uno). */
 const EXCLUDE_SLUGS = new Set([
-  'posterior-tibialis-stretch',
-  'peroneals-stretch',
-  'assisted-side-lying-adductor-stretch',
-  'assisted-lying-calves-stretch',
-  'assisted-lying-glutes-stretch',
-  'assisted-lying-gluteus-and-piriformis-stretch',
-  'self-assisted-inverse-leg-curl',
-  'self-assisted-inverse-leg-curl-on-floor',
-  'self-assisted-inverse-leg-curl-1766',
-  'glute-ham-raise',
-  'inverse-leg-curl-bench-support'
+  'posterior-tibialis-stretch','peroneals-stretch','assisted-side-lying-adductor-stretch',
+  'assisted-lying-calves-stretch','assisted-lying-glutes-stretch',
+  'assisted-lying-gluteus-and-piriformis-stretch','self-assisted-inverse-leg-curl',
+  'self-assisted-inverse-leg-curl-on-floor','self-assisted-inverse-leg-curl-1766',
+  'glute-ham-raise','inverse-leg-curl-bench-support',
+  '45-side-bend','decline-crunch','decline-sit-up','incline-leg-hip-raise-leg-straight',
+  'incline-twisting-sit-up','negative-crunch','assisted-lying-leg-raise-with-lateral-throw-down',
+  'assisted-lying-leg-raise-with-throw-down','assisted-motion-russian-twist','assisted-sit-up',
+  'spell-caster','twisted-leg-raise-female','twisted-leg-raise','wind-sprints',
+  'box-jump-down-with-one-leg-stabilization','biceps-leg-concentration-curl',
+  'run-equipment','stationary-bike-run-v-3','stationary-bike-walk','swing-360',
+  'standing-behind-neck-press','finger-curls','frankenstein-squat','kneeling-jump-squat',
+  'potty-squat-with-support',
+  'tire-flip','assisted-prone-hamstring','power-clean','back-pec-stretch',
+  'seated-lower-back-stretch','side-to-side-chin','twin-handle-parallel-grip-lat-pulldown',
+  'assisted-chest-dip-kneeling','assisted-wide-grip-chest-dip-kneeling','behind-head-chest-stretch',
+  'chest-dip','drop-push-up','hands-bike','incline-reverse-grip-push-up','korean-dips',
+  'dynamic-chest-stretch-male','balance-board','farmers-walk','snatch-pull','squat-jerk',
+  'hyperextension-on-bench','hyperextension','assisted-triceps-dip-kneeling','elbow-dips',
+  'impossible-dips','incline-close-grip-push-up','ski-ergometer','triceps-dip','triceps-press',
+  'bodyweight-squatting-row','bodyweight-standing-close-grip-one-arm-row',
+  'bodyweight-standing-close-grip-row','bodyweight-standing-one-arm-row','bodyweight-standing-row',
+  'inverted-row-bent-knees','inverted-row-on-bench','inverted-row-v-2','inverted-row',
+  'skin-the-cat'
 ]);
 
 (async function(){
