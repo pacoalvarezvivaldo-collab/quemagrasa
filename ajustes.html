@@ -122,7 +122,7 @@ function toggleFullscreen(){
   if(next) Prefs.maybeRequestFullscreen(); // el toque en este mismo botón cuenta como gesto del usuario
 }
 
-/* ---------- rueda de colores + modo arcoíris oculto ---------- */
+/* ---------- rueda de colores + alternador de modo arcoíris ---------- */
 function renderSwatches(){
   const sw = document.getElementById('swatches');
   sw.innerHTML = '';
@@ -137,7 +137,7 @@ function renderSwatches(){
   });
 }
 
-/* tocar los colores en el orden del arcoíris, sin ningún indicio visible de esta lógica */
+/* orden de colores requerido para activar el alternador de arcoíris */
 const RAINBOW_SEQUENCE = ['rojo','naranja','amarillo','verde','azul','morado'];
 let secretIdx = 0, secretResetTimer = null;
 
