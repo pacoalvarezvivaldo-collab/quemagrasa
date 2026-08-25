@@ -61,6 +61,21 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 .p-btn { flex:1; border:none; border-radius:14px; padding:13px; font-family:'Syne',sans-serif;
   font-size:13px; font-weight:700; cursor:pointer; background:var(--surface2); color:var(--text);
   border:1px solid var(--border); -webkit-tap-highlight-color:transparent; }
+.btn-avoid { display:block; margin:10px auto 0; background:none; border:none; color:var(--muted);
+  font-family:'Syne',sans-serif; font-size:11px; text-decoration:underline; cursor:pointer;
+  -webkit-tap-highlight-color:transparent; }
+
+/* ---------- descanso: círculo de respiración (sin GIF externo, solo CSS) ---------- */
+.breathe-wrap { display:none; width:100%; max-width:260px; aspect-ratio:1/1; margin:18px auto 0;
+  align-items:center; justify-content:center; }
+.breathe-wrap.show { display:flex; }
+.breathe-circle { width:52%; height:52%; border-radius:50%; background:var(--rest);
+  animation: breathe 8s ease-in-out infinite; }
+.breathe-caption { font-size:12px; color:var(--muted); margin-top:10px; letter-spacing:.04em; }
+@keyframes breathe {
+  0%, 100% { transform:scale(.72); opacity:.3; }
+  50%      { transform:scale(1); opacity:.55; }
+}
 
 .complete-icon { font-size:60px; }
 .complete-title { font-size:24px; font-weight:800; margin-top:10px; }
@@ -93,11 +108,16 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   <div class="play-progress" id="play-progress"></div>
   <div class="play-timer" id="play-timer">45</div>
   <img class="play-gif" id="play-gif" alt="">
+  <div class="breathe-wrap" id="breathe-wrap">
+    <div class="breathe-circle"></div>
+  </div>
   <div class="play-name" id="play-name"></div>
   <div class="play-hint" id="play-hint"></div>
   <div class="play-next" id="play-next"></div>
+  <button class="btn-avoid" id="btn-avoid" onclick="avoidCurrentExercise()">🚫 No quiero este ejercicio otra vez</button>
   <div class="play-controls">
     <button class="p-btn" id="btn-pause" onclick="togglePause()">⏸ Pausar</button>
+    <button class="p-btn" onclick="skipExercise()">⏭ Saltar</button>
     <button class="p-btn" onclick="goHome()">✕ Salir</button>
   </div>
 </div>
@@ -180,6 +200,7 @@ async function ensurePool(){
       ALL_EXERCISES = data.exercises.filter(e=>{
         const text = e.slug+' '+e.name;
         if(NO_EQUIPMENT_RE.test(text) || EXCLUDE_SLUGS.has(e.slug)) return false;
+        if(window.Prefs && Prefs.isExerciseAvoided(e.slug)) return false;
         e.chairTip = CHAIR_TIP_RE.test(text);
         return true;
       });
@@ -318,6 +339,27 @@ function advancePhase(){
   }
 }
 
+/* Adelanta al siguiente ejercicio ya mismo, sin importar si está en trabajo o descanso. */
+function skipExercise(){
+  vibrate(60);
+  if(idx >= session.length-1){ finishSession(); return; }
+  idx++;
+  phase = 'work';
+  startPhase();
+}
+
+/* Marca el ejercicio actual como "no cómodo" para este dispositivo (no se quita de la app para
+   nadie más) y salta al siguiente. Se filtra también de ALL_EXERCISES para que "Otra ronda" en
+   esta misma carga de página tampoco vuelva a proponerlo. */
+function avoidCurrentExercise(){
+  const ex = session[idx];
+  if(ex && window.Prefs){
+    Prefs.avoidExercise(ex.slug);
+    ALL_EXERCISES = ALL_EXERCISES.filter(e=>e.slug !== ex.slug);
+  }
+  skipExercise();
+}
+
 function togglePause(){
   paused = !paused;
   if(paused){ pausedAt = Date.now(); }
@@ -353,18 +395,21 @@ function render(){
   document.getElementById('play-progress').textContent = `Ejercicio ${idx+1}/${session.length}`;
 
   const img = document.getElementById('play-gif');
+  const breatheWrap = document.getElementById('breathe-wrap');
   if(phase==='work'){
     img.removeAttribute('src');
-    img.src = ex.gifUrl; img.alt = ex.name; img.style.visibility = '';
+    img.src = ex.gifUrl; img.alt = ex.name; img.style.display = '';
+    breatheWrap.classList.remove('show');
     document.getElementById('play-name').textContent = ex.name;
     document.getElementById('play-hint').textContent = ex.chairTip
       ? 'Haz las repeticiones que puedas · 💡 ¿No tienes banco? Usa una silla.'
       : 'Haz las repeticiones que puedas';
     document.getElementById('play-next').textContent = '';
   } else {
-    img.style.visibility = 'hidden';
-    document.getElementById('play-name').textContent = 'Descanso';
-    document.getElementById('play-hint').textContent = '';
+    img.style.display = 'none';
+    breatheWrap.classList.add('show');
+    document.getElementById('play-name').textContent = 'Descanso · respira';
+    document.getElementById('play-hint').textContent = '💧 ¡Tomar agua es importante!';
     const next = session[idx+1];
     document.getElementById('play-next').textContent = next ? `Siguiente: ${next.name}` : 'Último — ya casi terminas';
   }

@@ -9,7 +9,8 @@
 (function(){
 
 const KEY_SOUND = 'qg_pref_sound', KEY_SCREEN = 'qg_pref_screen',
-      KEY_FULLSCREEN = 'qg_pref_fullscreen', KEY_RAINBOW = 'qg_rainbow', KEY_THEME = 'qg_pref_theme';
+      KEY_FULLSCREEN = 'qg_pref_fullscreen', KEY_RAINBOW = 'qg_rainbow', KEY_THEME = 'qg_pref_theme',
+      KEY_AVOIDED = 'qg_avoided_exercises';
 
 /* ---------- temas de color: copia exacta de los 12 que ya existían en cardio.html ---------- */
 const THEMES = {
@@ -102,12 +103,31 @@ function setThemeKey(k){
 }
 function getThemeList(){ return Object.keys(THEMES).map(k=>({ key:k, swatch:THEMES[k].sw })); }
 
+/* ---------- ejercicios evitados: "no me siento cómodo con este" por dispositivo, no
+   se quita de la app para nadie más, solo deja de salir para quien lo marcó. ---------- */
+function getAvoidedExercises(){
+  try{ const raw = localStorage.getItem(KEY_AVOIDED); const list = raw ? JSON.parse(raw) : []; return Array.isArray(list) ? list : []; }
+  catch(e){ return []; }
+}
+function isExerciseAvoided(slug){ return getAvoidedExercises().includes(slug); }
+function avoidExercise(slug){
+  if(!slug) return;
+  try{
+    const list = getAvoidedExercises();
+    if(!list.includes(slug)){ list.push(slug); localStorage.setItem(KEY_AVOIDED, JSON.stringify(list)); }
+  }catch(e){}
+}
+function unavoidExercise(slug){
+  try{ localStorage.setItem(KEY_AVOIDED, JSON.stringify(getAvoidedExercises().filter(s=>s!==slug))); }catch(e){}
+}
+
 window.Prefs = {
   getSoundWarningOn, setSoundWarningOn,
   getKeepScreenOn, setKeepScreenOn,
   getFullscreenPref, setFullscreenPref,
   maybeRequestFullscreen,
   isRainbowOn, hasRainbowBeenDiscovered, setRainbowOn, applyRainbowIfOn,
-  getThemeKey, setThemeKey, applyThemeIfSet, getThemeList
+  getThemeKey, setThemeKey, applyThemeIfSet, getThemeList,
+  getAvoidedExercises, isExerciseAvoided, avoidExercise, unavoidExercise
 };
 })();
