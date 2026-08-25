@@ -173,6 +173,7 @@ renderCorrer();
 renderCardio();
 renderPlan('ent_', 'casa-level', 'casa-days');
 renderPlan('gym_', 'gimnasio-level', 'gimnasio-days');
+try{ Prefs.applyThemeIfSet(); }catch(e){}
 try{ Prefs.applyRainbowIfOn(); }catch(e){}
 document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
 </script>

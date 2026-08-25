@@ -907,7 +907,7 @@ function syncButtons(){
   document.querySelectorAll('#machine-grid .opt-btn').forEach(b=>b.classList.toggle('active', b.dataset.key===machineKey));
 }
 function applyTheme(k){
-  themeKey=k; const t=THEMES[k], r=document.documentElement;
+  themeKey=k; const t=THEMES[k]||THEMES.negro, r=document.documentElement;
   r.style.setProperty('--bg',t.v.bg); r.style.setProperty('--surface',t.v.s1);
   r.style.setProperty('--surface2',t.v.s2); r.style.setProperty('--text',t.v.tx);
   r.style.setProperty('--muted',t.v.mu); r.style.setProperty('--border',t.v.bd);
@@ -977,7 +977,7 @@ document.getElementById('settings-overlay').addEventListener('click',function(e)
     s.className='swatch'+(k===themeKey?' active':''); s.dataset.key=k;
     s.style.background=THEMES[k].sw;
     if(k==='blanco') s.style.border='3px solid rgba(0,0,0,.15)';
-    s.onclick=()=>applyTheme(k); sw.appendChild(s);
+    s.onclick=()=>{ applyTheme(k); if(window.Prefs) Prefs.setThemeKey(k); }; sw.appendChild(s);
   });
 })();
 
@@ -1026,15 +1026,16 @@ async function loadSettings(){
     // fijadas" y devolvería true).
     if(c && typeof c.bgMode==='boolean' && localStorage.getItem('qg_pref_screen')===null) Prefs.setKeepScreenOn(c.bgMode);
     if(c && typeof c.preWarn==='boolean' && localStorage.getItem('qg_pref_sound')===null) Prefs.setSoundWarningOn(c.preWarn);
-    bgMode = Prefs.getKeepScreenOn(); preWarn = Prefs.getSoundWarningOn();
+    if(c && typeof c.themeKey==='string' && THEMES[c.themeKey] && localStorage.getItem('qg_pref_theme')===null) Prefs.setThemeKey(c.themeKey);
+    bgMode = Prefs.getKeepScreenOn(); preWarn = Prefs.getSoundWarningOn(); themeKey = Prefs.getThemeKey();
   }
   if(!('wakeLock' in navigator)) bgMode=false;
   syncToggleUI();
+  applyTheme(themeKey);
   if(!c) return;
   if(c.machineKey&&MACHINES[c.machineKey]) machineKey=c.machineKey;
   if(c.levelKey&&LEVELS[c.levelKey]) levelKey=c.levelKey;
   if([15,30,40].includes(c.durKey)) durKey=c.durKey;
-  if(c.themeKey&&THEMES[c.themeKey]) themeKey=c.themeKey;
   if(c.userWeight>0) userWeight=c.userWeight;
   if(c.musicLink && /^https?:\/\//i.test(c.musicLink)) musicLink=c.musicLink;
   ['soundOn','adjustOn','propagate','gymEnabled'].forEach(k=>{
@@ -1136,7 +1137,7 @@ if(!('wakeLock' in navigator)){
 }
 
 /* ---------- init ---------- */
-buildPlan(); rebuildTimeline(); refreshHeader(); applyTheme(themeKey); updateUI();
+buildPlan(); rebuildTimeline(); refreshHeader(); applyTheme(window.Prefs ? Prefs.getThemeKey() : themeKey); updateUI();
 (async()=>{
   if(window.QuemaSync) await QuemaSync.initSilent(); // sin botón propio: hereda la sesión ya persistida por Supabase, si existe
   await loadSettings();

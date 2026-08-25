@@ -45,12 +45,11 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 .mode-row.accent .mode-sub { color:#c98a2e; }
 
 .flame { cursor:pointer; display:inline-block; -webkit-tap-highlight-color:transparent; }
-.egg-overlay { position:fixed; inset:0; background:#0d0d0f; display:flex; align-items:center; justify-content:center;
+.egg-overlay { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center;
   z-index:300; opacity:0; pointer-events:none; transition:opacity .3s; padding:30px; text-align:center; }
 .egg-overlay.show { opacity:1; pointer-events:all; }
 .egg-big { font-size:32px; font-weight:800; color:var(--accent); line-height:1.4; }
 .egg-small { font-size:15px; color:var(--muted); margin-top:10px; line-height:1.5; }
-.rainbow-zone { position:fixed; top:0; height:16px; width:16.6667vw; z-index:400; }
 
 .mode-row.fallen { position:fixed; cursor:grab; z-index:500; touch-action:none;
   transition:top .7s cubic-bezier(.34,1.4,.64,1), left .7s cubic-bezier(.34,1.4,.64,1), transform .7s cubic-bezier(.34,1.4,.64,1); }
@@ -225,13 +224,6 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
     <div class="egg-small" id="egg-small"></div>
   </div>
 </div>
-
-<div class="rainbow-zone" data-z="0" style="left:0"></div>
-<div class="rainbow-zone" data-z="1" style="left:16.6667vw"></div>
-<div class="rainbow-zone" data-z="2" style="left:33.3333vw"></div>
-<div class="rainbow-zone" data-z="3" style="left:50vw"></div>
-<div class="rainbow-zone" data-z="4" style="left:66.6667vw"></div>
-<div class="rainbow-zone" data-z="5" style="left:83.3333vw"></div>
 
 <script src="sync.js"></script>
 <script src="weight-log.js"></script>
@@ -535,37 +527,15 @@ document.getElementById('flame').addEventListener('click', ()=>{
   }
 });
 
-/* easter egg oculto: tocar las 6 zonas invisibles en orden (izquierda a derecha) alterna "modo arcoíris".
-   El efecto de color (el ciclo en sí) vive en prefs.js, compartido con las demás páginas —
-   aquí solo queda el mecanismo secreto de descubrimiento. */
-let rainbowExpected = 0, rainbowResetTimer = null;
-
-document.querySelectorAll('.rainbow-zone').forEach(zone=>{
-  zone.addEventListener('click', ()=>{
-    const z = parseInt(zone.dataset.z, 10);
-    clearTimeout(rainbowResetTimer);
-    if(z === rainbowExpected){
-      rainbowExpected++;
-      if(rainbowExpected >= 6){
-        rainbowExpected = 0;
-        Prefs.setRainbowOn(!Prefs.isRainbowOn());
-        return;
-      }
-      rainbowResetTimer = setTimeout(()=>{ rainbowExpected = 0; }, 4000);
-    } else {
-      rainbowExpected = (z===0) ? 1 : 0;
-      if(rainbowExpected) rainbowResetTimer = setTimeout(()=>{ rainbowExpected = 0; }, 4000);
-    }
-  });
-});
-
+/* aplica el tema elegido y el ciclo de color si el modo arcoíris ya está activo. */
+try{ Prefs.applyThemeIfSet(); }catch(e){}
 try{ Prefs.applyRainbowIfOn(); }catch(e){}
 
 document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
 
-/* toque en zona vacía (fuera de botones/links/zonas ocultas): ripple ambient, sin acción */
+/* toque en zona vacía (fuera de botones/links): ripple ambient, sin acción */
 document.addEventListener('click', e=>{
-  if(e.target.closest('a, button, input, .progress-card, .progress-goal-link, .rainbow-zone')) return;
+  if(e.target.closest('a, button, input, .progress-card, .progress-goal-link')) return;
   const r = document.createElement('div');
   r.className = 'tap-ripple';
   r.style.left = e.clientX + 'px';

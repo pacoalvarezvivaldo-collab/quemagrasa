@@ -49,7 +49,13 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 .toggle-row.on .toggle-sw { background:var(--accent); }
 .toggle-row.on .toggle-sw::after { transform:translateX(19px); }
 
-.rainbow-note { font-size:12.5px; color:var(--muted); background:var(--surface2); border-radius:12px; padding:12px 14px; }
+.swatches { display:flex; flex-wrap:wrap; gap:10px; }
+.swatch { width:38px; height:38px; border-radius:50%; cursor:pointer; border:3px solid transparent;
+  transition:border-color .2s,transform .12s; -webkit-tap-highlight-color:transparent; position:relative; }
+.swatch:active { transform:scale(.9); }
+.swatch.active { border-color:var(--text); }
+.swatch.active::after { content:"✓"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; }
+#rainbow-box .toggle-row { margin-top:10px; }
 </style>
 </head>
 <body>
@@ -82,6 +88,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 
   <div class="set-group">
     <div class="set-label">Color</div>
+    <div class="swatches" id="swatches"></div>
     <div id="rainbow-box"></div>
   </div>
 </div>
@@ -115,12 +122,51 @@ function toggleFullscreen(){
   if(next) Prefs.maybeRequestFullscreen(); // el toque en este mismo botón cuenta como gesto del usuario
 }
 
+/* ---------- rueda de colores + alternador de modo arcoíris ---------- */
+function renderSwatches(){
+  const sw = document.getElementById('swatches');
+  sw.innerHTML = '';
+  Prefs.getThemeList().forEach(({key, swatch})=>{
+    const s = document.createElement('div');
+    s.className = 'swatch' + (key===Prefs.getThemeKey() ? ' active' : '');
+    s.dataset.key = key;
+    s.style.background = swatch;
+    if(key==='blanco') s.style.border = '3px solid rgba(0,0,0,.15)';
+    s.onclick = ()=>pickColor(key);
+    sw.appendChild(s);
+  });
+}
+
+/* orden de colores requerido para activar el alternador de arcoíris */
+const RAINBOW_SEQUENCE = ['rojo','naranja','amarillo','verde','azul','morado'];
+let secretIdx = 0, secretResetTimer = null;
+
+function pickColor(key){
+  Prefs.setThemeKey(key);
+  renderSwatches();
+  checkSecretSequence(key);
+}
+
+function checkSecretSequence(key){
+  clearTimeout(secretResetTimer);
+  if(key === RAINBOW_SEQUENCE[secretIdx]){
+    secretIdx++;
+    if(secretIdx >= RAINBOW_SEQUENCE.length){
+      secretIdx = 0;
+      Prefs.setRainbowOn(!Prefs.isRainbowOn());
+      renderRainbowBox();
+      return;
+    }
+    secretResetTimer = setTimeout(()=>{ secretIdx = 0; }, 4000);
+  } else {
+    secretIdx = (key === RAINBOW_SEQUENCE[0]) ? 1 : 0;
+    if(secretIdx) secretResetTimer = setTimeout(()=>{ secretIdx = 0; }, 4000);
+  }
+}
+
 function renderRainbowBox(){
   const box = document.getElementById('rainbow-box');
-  if(!Prefs.hasRainbowBeenDiscovered()){
-    box.innerHTML = '<div class="rainbow-note">🔒 Hay un modo de color secreto por descubrir en Inicio</div>';
-    return;
-  }
+  if(!Prefs.hasRainbowBeenDiscovered()){ box.innerHTML = ''; return; }
   box.innerHTML = `<div class="toggle-row on" id="rainbow-row" onclick="toggleRainbowMode()">
     <span class="toggle-txt">🌈 Modo arcoíris</span>
     <span class="toggle-sw"></span>
@@ -133,7 +179,9 @@ function toggleRainbowMode(){
 }
 
 syncToggleUI();
+renderSwatches();
 renderRainbowBox();
+try{ Prefs.applyThemeIfSet(); }catch(e){}
 try{ Prefs.applyRainbowIfOn(); }catch(e){}
 document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
 </script>

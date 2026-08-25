@@ -96,7 +96,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   -webkit-tap-highlight-color:transparent; }
 
 /* ---- easter egg espartano ---- */
-.egg-overlay { position:fixed; inset:0; background:#0d0d0f; display:flex; align-items:center; justify-content:center;
+.egg-overlay { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center;
   z-index:300; opacity:0; pointer-events:none; transition:opacity .3s; padding:30px; text-align:center; }
 .egg-overlay.show { opacity:1; pointer-events:all; }
 .egg-text { font-size:19px; font-weight:800; color:var(--accent); line-height:1.5; }
@@ -215,6 +215,7 @@ const CHAIR_TIP_RE = /bench|banco/i;
   });
 })();
 
+try{ Prefs.applyThemeIfSet(); }catch(e){}
 try{ Prefs.applyRainbowIfOn(); }catch(e){}
 document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
 </script>
