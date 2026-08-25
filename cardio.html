@@ -977,7 +977,7 @@ document.getElementById('settings-overlay').addEventListener('click',function(e)
     s.className='swatch'+(k===themeKey?' active':''); s.dataset.key=k;
     s.style.background=THEMES[k].sw;
     if(k==='blanco') s.style.border='3px solid rgba(0,0,0,.15)';
-    s.onclick=()=>applyTheme(k); sw.appendChild(s);
+    s.onclick=()=>{ applyTheme(k); if(window.Prefs) Prefs.setThemeKey(k); }; sw.appendChild(s);
   });
 })();
 
@@ -1026,7 +1026,8 @@ async function loadSettings(){
     // fijadas" y devolvería true).
     if(c && typeof c.bgMode==='boolean' && localStorage.getItem('qg_pref_screen')===null) Prefs.setKeepScreenOn(c.bgMode);
     if(c && typeof c.preWarn==='boolean' && localStorage.getItem('qg_pref_sound')===null) Prefs.setSoundWarningOn(c.preWarn);
-    bgMode = Prefs.getKeepScreenOn(); preWarn = Prefs.getSoundWarningOn();
+    if(c && typeof c.themeKey==='string' && THEMES[c.themeKey] && localStorage.getItem('qg_pref_theme')===null) Prefs.setThemeKey(c.themeKey);
+    bgMode = Prefs.getKeepScreenOn(); preWarn = Prefs.getSoundWarningOn(); themeKey = Prefs.getThemeKey();
   }
   if(!('wakeLock' in navigator)) bgMode=false;
   syncToggleUI();
@@ -1034,7 +1035,6 @@ async function loadSettings(){
   if(c.machineKey&&MACHINES[c.machineKey]) machineKey=c.machineKey;
   if(c.levelKey&&LEVELS[c.levelKey]) levelKey=c.levelKey;
   if([15,30,40].includes(c.durKey)) durKey=c.durKey;
-  if(c.themeKey&&THEMES[c.themeKey]) themeKey=c.themeKey;
   if(c.userWeight>0) userWeight=c.userWeight;
   if(c.musicLink && /^https?:\/\//i.test(c.musicLink)) musicLink=c.musicLink;
   ['soundOn','adjustOn','propagate','gymEnabled'].forEach(k=>{
