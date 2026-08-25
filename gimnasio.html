@@ -220,6 +220,7 @@ await PlanEngine.init({
 }catch(e){ console.error('Gimnasio init falló:', e); }
 })();
 
+try{ Prefs.applyThemeIfSet(); }catch(e){}
 try{ Prefs.applyRainbowIfOn(); }catch(e){}
 document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
 </script>
