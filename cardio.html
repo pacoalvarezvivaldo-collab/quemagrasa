@@ -9,7 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d0d0f">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://esm.sh; img-src 'self' data:; media-src 'self' data:; connect-src https://*.supabase.co; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
-<title>Cardio HIIT · Quemagrasa</title>
+<title>Cardio HIIT · SPORTIUUM</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -449,7 +449,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 <script src="prefs.js"></script>
 <script>
 /* =====================================================================
-   QUEMAGRASA v3
+   SPORTIUUM v3
    - 4 niveles · 3 duraciones · 3 máquinas · 12 colores
    - Motor de tiempo con reloj real (exacto en segundo plano)
    - Pre-aviso 10 s antes del sprint
@@ -609,7 +609,7 @@ function updateMediaSession(){
     navigator.mediaSession.metadata=new MediaMetadata({
       title: iv.name,
       artist: `${MACHINES[machineKey].label} · ${LEVELS[levelKey].label}`,
-      album: `Quemagrasa ${durKey} min`
+      album: `SPORTIUUM ${durKey} min`
     });
     navigator.mediaSession.setActionHandler('play', ()=>{ if(!running) toggleTimer(); });
     navigator.mediaSession.setActionHandler('pause', ()=>{ if(running) toggleTimer(); });

@@ -518,7 +518,7 @@ async function shareRun(){
   const km = (lastResult.distanceM/1000).toFixed(2);
   const t = fmtTime(lastResult.elapsedS);
   const verbo = lastResult.mode==='correr' ? '🏃 Corrí' : '🚶 Caminé';
-  const text = `${verbo} ${km} km en ${t} — ${lastResult.steps} pasos estimados, ${lastResult.kcal} kcal. #Quemagrasa`;
+  const text = `${verbo} ${km} km en ${t} — ${lastResult.steps} pasos estimados, ${lastResult.kcal} kcal. #SPORTIUUM`;
   if(navigator.share){
     try{ await navigator.share({ text }); }catch(e){ /* usuario canceló, no hacer nada */ }
   } else {
