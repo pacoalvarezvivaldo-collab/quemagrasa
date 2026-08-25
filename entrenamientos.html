@@ -194,18 +194,35 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
    ===================================================================== */
 
 /* Filtra ejercicios que piden equipo poco común en casa (pelotas/fitball/bosu, barras/barras
-   paralelas, dominadas/muscle-ups/colgado que necesitan barra aunque el slug no diga "bar") —
-   no toda la gente lo tiene. Los de banco se dejan pero se marcan para sugerir una silla en su
-   lugar. Basado en los slugs/nombres reales del catálogo, no en suposiciones. */
-const NO_EQUIPMENT_RE = /ball|balon|balón|pelota|medicine|swiss|estabilidad|barbell|ez-bar|\bbars?\b|barra|pull-up|pullup|chin-up|chinup|muscle-up|muscleup|hanging|colgad|dominad|dip-cage|jaula de dominadas|captains-chair|silla del capitan|silla del capitán|ring-dips|anillas/i;
+   paralelas, dominadas/muscle-ups/colgado que necesitan barra aunque el slug no diga "bar",
+   rodillos, cuerdas, correas/ligas, toallas, mancuernas/pesas, máquinas) — no toda la gente lo
+   tiene. Los de banco se dejan pero se marcan para sugerir una silla en su lugar. Basado en los
+   slugs/nombres reales del catálogo, no en suposiciones. */
+const NO_EQUIPMENT_RE = /ball|balon|balón|pelota|medicine|swiss|estabilidad|stability|barbell|ez-bar|\bbars?\b|barra|pull-up|pullup|chin-up|chinup|muscle-up|muscleup|hanging|colgad|dominad|dip-cage|jaula de dominadas|captains-chair|silla del capitan|silla del capitán|ring-dips|anillas|roller|rodillo|rueda|wheel|rope|cuerda|strap|correa|towel|toalla|weighted|\bband\b|banda|liga\b|resistance|resistencia|mancuerna|dumbbell|kettlebell|m[aá]quina|machine|cable|trx|plate|disco|chair|silla|suspend/i;
 const CHAIR_TIP_RE = /bench|banco/i;
+/* El catálogo etiqueta estos como "bodyweight" pero el GIF real usa liga/correa (tibial
+   posterior, peroneos), requiere ayuda de otra persona (assisted-*-stretch de dos figuras), o
+   es una máquina de curl femoral nórdico/GHR — revisado a mano viendo cada imagen. */
+const EXCLUDE_SLUGS = new Set([
+  'posterior-tibialis-stretch',
+  'peroneals-stretch',
+  'assisted-side-lying-adductor-stretch',
+  'assisted-lying-calves-stretch',
+  'assisted-lying-glutes-stretch',
+  'assisted-lying-gluteus-and-piriformis-stretch',
+  'self-assisted-inverse-leg-curl',
+  'self-assisted-inverse-leg-curl-on-floor',
+  'self-assisted-inverse-leg-curl-1766',
+  'glute-ham-raise',
+  'inverse-leg-curl-bench-support'
+]);
 
 (async function(){
   if(window.QuemaSync) await QuemaSync.init(document.getElementById('sync-btn'));
   PlanEngine.init({
     equipmentUrls: ['https://cdn.jsdelivr.net/gh/JahelCuadrado/ExerciseGymGifsDB@v1.1.0/api/es/equipment/bodyweight.json'],
     keyPrefix: 'ent_',
-    excludeExercise: e => NO_EQUIPMENT_RE.test(e.slug+' '+e.name),
+    excludeExercise: e => NO_EQUIPMENT_RE.test(e.slug+' '+e.name) || EXCLUDE_SLUGS.has(e.slug),
     chairTip: e => CHAIR_TIP_RE.test(e.slug+' '+e.name),
     onSaveLevel: level => { if(window.QuemaSync) QuemaSync.pushUserState({ plan_level: level }); },
     onSaveCompleted: days => { if(window.QuemaSync) QuemaSync.pushUserState({ plan_completed_days: days }); },
