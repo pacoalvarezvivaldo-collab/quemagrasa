@@ -55,8 +55,7 @@ function maybeRequestFullscreen(){
   document.documentElement.requestFullscreen().catch(()=>{});
 }
 
-/* ---------- modo arcoíris: efecto compartido (el descubrimiento de las
-   6 zonas vive solo en index.html, aquí solo el ciclo de color) ---------- */
+/* ---------- modo arcoíris: solo el ciclo de color, compartido por todas las páginas ---------- */
 let rainbowInterval = null, rainbowHue = 0;
 function applyRainbowHue(){
   document.documentElement.style.setProperty('--accent', `hsl(${rainbowHue}, 85%, 55%)`);

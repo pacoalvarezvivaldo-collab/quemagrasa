@@ -907,7 +907,7 @@ function syncButtons(){
   document.querySelectorAll('#machine-grid .opt-btn').forEach(b=>b.classList.toggle('active', b.dataset.key===machineKey));
 }
 function applyTheme(k){
-  themeKey=k; const t=THEMES[k], r=document.documentElement;
+  themeKey=k; const t=THEMES[k]||THEMES.negro, r=document.documentElement;
   r.style.setProperty('--bg',t.v.bg); r.style.setProperty('--surface',t.v.s1);
   r.style.setProperty('--surface2',t.v.s2); r.style.setProperty('--text',t.v.tx);
   r.style.setProperty('--muted',t.v.mu); r.style.setProperty('--border',t.v.bd);
@@ -1137,7 +1137,7 @@ if(!('wakeLock' in navigator)){
 }
 
 /* ---------- init ---------- */
-buildPlan(); rebuildTimeline(); refreshHeader(); applyTheme(themeKey); updateUI();
+buildPlan(); rebuildTimeline(); refreshHeader(); applyTheme(window.Prefs ? Prefs.getThemeKey() : themeKey); updateUI();
 (async()=>{
   if(window.QuemaSync) await QuemaSync.initSilent(); // sin botón propio: hereda la sesión ya persistida por Supabase, si existe
   await loadSettings();

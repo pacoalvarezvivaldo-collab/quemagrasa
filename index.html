@@ -45,7 +45,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 .mode-row.accent .mode-sub { color:#c98a2e; }
 
 .flame { cursor:pointer; display:inline-block; -webkit-tap-highlight-color:transparent; }
-.egg-overlay { position:fixed; inset:0; background:#0d0d0f; display:flex; align-items:center; justify-content:center;
+.egg-overlay { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center;
   z-index:300; opacity:0; pointer-events:none; transition:opacity .3s; padding:30px; text-align:center; }
 .egg-overlay.show { opacity:1; pointer-events:all; }
 .egg-big { font-size:32px; font-weight:800; color:var(--accent); line-height:1.4; }
@@ -527,14 +527,13 @@ document.getElementById('flame').addEventListener('click', ()=>{
   }
 });
 
-/* el descubrimiento del modo arcoíris ahora vive en ajustes.html (tocar los colores en la secuencia
-   correcta) — aquí solo queda aplicar el tema elegido y el efecto si ya está activo. */
+/* aplica el tema elegido y el ciclo de color si el modo arcoíris ya está activo. */
 try{ Prefs.applyThemeIfSet(); }catch(e){}
 try{ Prefs.applyRainbowIfOn(); }catch(e){}
 
 document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
 
-/* toque en zona vacía (fuera de botones/links/zonas ocultas): ripple ambient, sin acción */
+/* toque en zona vacía (fuera de botones/links): ripple ambient, sin acción */
 document.addEventListener('click', e=>{
   if(e.target.closest('a, button, input, .progress-card, .progress-goal-link')) return;
   const r = document.createElement('div');
