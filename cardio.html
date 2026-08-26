@@ -366,7 +366,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 
     <div class="set-group adv-only">
       <div class="set-label">Equipo</div>
-      <div class="grid-3" id="machine-grid"></div>
+      <div class="grid-4" id="machine-grid"></div>
       <div class="note">Para cambiar de máquina normalmente no hace falta esto — vuelve al inicio y elige Elíptica/Caminadora/Escaladora ahí.</div>
     </div>
 
@@ -497,6 +497,19 @@ const MACHINES = {
   },
   caminadora: {
     label:"Caminadora", icon:"🏃",
+    aeroName:"Trote aeróbico", sprintName:"⚡ Sprint",
+    p1lbl:"Velocidad", u1:"km/h", min1:4, max1:20, dec1:1, badge1:v=>v+"km/h",
+    p2lbl:"Inclinación", u2:"%",  min2:0, max2:15, dec2:0, badge2:v=>v+"%",
+    frac:{ easy:[0.06,0.07], moderate:[0.20,0.13], intense:[0.42,0.10], recovery:[0.05,0.05] },
+    ramp:{ easy:[0,0],       moderate:[0.015,0.03], intense:[0.025,0.01], recovery:[0,0] },
+    pace:{ easy:"Caminar", moderate:"Trote", intense:"Correr", recovery:"Caminar" }
+  },
+  caminadora_casa: {
+    /* Misma mecánica que "Caminadora" (gimnasio) — la calibración de "Límites de tu máquina"
+       ya normaliza todo como % del rango real de CADA quien, así que no hace falta un motor
+       aparte. Existe como entrada separada solo para que la persona con caminadora casera la
+       encuentre por su nombre en vez de adivinar si "Caminadora" es la de gimnasio. */
+    label:"Caminadora en Casa", icon:"🏠",
     aeroName:"Trote aeróbico", sprintName:"⚡ Sprint",
     p1lbl:"Velocidad", u1:"km/h", min1:4, max1:20, dec1:1, badge1:v=>v+"km/h",
     p2lbl:"Inclinación", u2:"%",  min2:0, max2:15, dec2:0, badge2:v=>v+"%",
