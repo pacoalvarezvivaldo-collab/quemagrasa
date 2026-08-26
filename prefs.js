@@ -10,7 +10,7 @@
 
 const KEY_SOUND = 'qg_pref_sound', KEY_SCREEN = 'qg_pref_screen',
       KEY_FULLSCREEN = 'qg_pref_fullscreen', KEY_RAINBOW = 'qg_rainbow', KEY_THEME = 'qg_pref_theme',
-      KEY_AVOIDED = 'qg_avoided_exercises';
+      KEY_AVOIDED = 'qg_avoided_exercises', KEY_ADVANCED = 'qg_pref_advanced';
 
 /* ---------- temas de color: copia exacta de los 12 que ya existían en cardio.html ---------- */
 const THEMES = {
@@ -48,6 +48,11 @@ function getKeepScreenOn(){ return getBool(KEY_SCREEN, true); }
 function setKeepScreenOn(v){ setBool(KEY_SCREEN, v); }
 function getFullscreenPref(){ return getBool(KEY_FULLSCREEN, false); }
 function setFullscreenPref(v){ setBool(KEY_FULLSCREEN, v); }
+/* Modo avanzado: apagado por defecto — vista simple para quien recién empieza.
+   Al prenderlo, páginas como Cardio muestran sus controles técnicos/duplicados
+   (equipo, calibración, ajuste en vivo, color, pantalla encendida). */
+function getAdvancedMode(){ return getBool(KEY_ADVANCED, false); }
+function setAdvancedMode(v){ setBool(KEY_ADVANCED, v); }
 
 function maybeRequestFullscreen(){
   if(!getFullscreenPref()) return;
@@ -125,6 +130,7 @@ window.Prefs = {
   getSoundWarningOn, setSoundWarningOn,
   getKeepScreenOn, setKeepScreenOn,
   getFullscreenPref, setFullscreenPref,
+  getAdvancedMode, setAdvancedMode,
   maybeRequestFullscreen,
   isRainbowOn, hasRainbowBeenDiscovered, setRainbowOn, applyRainbowIfOn,
   getThemeKey, setThemeKey, applyThemeIfSet, getThemeList,

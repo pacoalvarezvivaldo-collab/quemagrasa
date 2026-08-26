@@ -177,6 +177,14 @@ body { color:var(--text); font-family:'Syne',sans-serif; display:flex; flex-dire
 .opt-btn .o-sub { font-size:9px; color:var(--muted); display:block; margin-top:1px; }
 .opt-btn.active { border-color:var(--accent); background:var(--accent); color:var(--accent-text); }
 .opt-btn.active .o-sub { color:var(--accent-text); opacity:.7; }
+/* Vista simple por defecto: oculta controles técnicos/duplicados de Ajustes hasta que
+   la persona prenda "Configuración avanzada" en Ajustes. Ver docs/CARDIO_MODO_SIMPLE.md */
+.adv-only { display:none; }
+.set-group.adv-only { display:none; }
+.toggle-row.adv-only { display:none; }
+body.advanced-mode .adv-only { display:block; }
+body.advanced-mode .toggle-row.adv-only { display:flex; }
+
 .swatches { display:flex; flex-wrap:wrap; gap:10px; }
 .swatch { width:38px; height:38px; border-radius:50%; cursor:pointer; border:3px solid transparent;
   transition:border-color .2s,transform .12s; -webkit-tap-highlight-color:transparent; position:relative; }
@@ -356,9 +364,10 @@ input, textarea { -webkit-user-select:text; user-select:text; }
       <div class="grid-3" id="duration-grid"></div>
     </div>
 
-    <div class="set-group">
+    <div class="set-group adv-only">
       <div class="set-label">Equipo</div>
       <div class="grid-3" id="machine-grid"></div>
+      <div class="note">Para cambiar de máquina normalmente no hace falta esto — vuelve al inicio y elige Elíptica/Caminadora/Escaladora ahí.</div>
     </div>
 
     <div class="set-group">
@@ -368,12 +377,12 @@ input, textarea { -webkit-user-select:text; user-select:text; }
           <span class="toggle-sub">Tiempo para subir carga y respirar</span></span>
         <span class="toggle-sw"></span>
       </div>
-      <div class="toggle-row on" id="adjust-toggle-row" onclick="toggleAdjust()">
+      <div class="toggle-row on adv-only" id="adjust-toggle-row" onclick="toggleAdjust()">
         <span class="toggle-txt">Ajuste rápido ± en vivo
           <span class="toggle-sub">Corrige el bloque sin salir de la pantalla</span></span>
         <span class="toggle-sw"></span>
       </div>
-      <div class="toggle-row on sub" id="propagate-row" onclick="togglePropagate()">
+      <div class="toggle-row on sub adv-only" id="propagate-row" onclick="togglePropagate()">
         <span class="toggle-txt">Aplicar a los bloques siguientes iguales
           <span class="toggle-sub">Si no, sólo cambia el bloque actual</span></span>
         <span class="toggle-sw"></span>
@@ -385,15 +394,16 @@ input, textarea { -webkit-user-select:text; user-select:text; }
       </div>
     </div>
 
-    <div class="set-group">
+    <div class="set-group adv-only">
       <div class="set-label">Límites de tu máquina</div>
       <div id="calib-box"></div>
       <div class="note">Captura el máximo que muestra tu consola. Toda la rutina se recalcula como % de ese rango, así que funciona en cualquier modelo de gimnasio.</div>
     </div>
 
-    <div class="set-group">
+    <div class="set-group adv-only">
       <div class="set-label">Color</div>
       <div class="swatches" id="swatches"></div>
+      <div class="note">El color de toda la app se cambia normalmente desde Ajustes ⚙️ — esto es solo si quieres uno distinto nada más para Cardio.</div>
     </div>
 
     <div class="set-group">
@@ -406,7 +416,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 
     <div class="set-group">
       <div class="set-label">Segundo plano y sonido</div>
-      <div class="toggle-row on" id="bgmode-row" onclick="toggleBgMode()">
+      <div class="toggle-row on adv-only" id="bgmode-row" onclick="toggleBgMode()">
         <span class="toggle-txt">Mantener pantalla encendida
           <span class="toggle-sub" id="bgmode-sub">Evita que el celular bloquee la pantalla al entrenar</span></span>
         <span class="toggle-sw"></span>
@@ -415,7 +425,9 @@ input, textarea { -webkit-user-select:text; user-select:text; }
         <span class="toggle-txt">Beeps de cambio de bloque</span>
         <span class="toggle-sw"></span>
       </div>
-      <div class="note">El temporizador usa reloj real: si cierras la pantalla o cambias de app, al volver se pone al corriente solo. Los beeps y vibraciones sólo suenan mientras la app está al frente — con pantalla bloqueada el celular los pausa.</div>
+      <div class="note">El temporizador usa reloj real: si cierras la pantalla o cambias de app, al volver se pone al corriente solo. Los beeps y vibraciones sólo suenan mientras la app está al frente — con pantalla bloqueada el celular los pausa.
+        <span class="adv-only" style="margin-top:4px;">"Mantener pantalla encendida" ya viene de Ajustes ⚙️ — actívalo aquí solo si lo quieres distinto en Cardio.</span>
+      </div>
     </div>
 
     <div class="set-group">
@@ -1012,8 +1024,9 @@ function syncToggleUI(){
   [['bgmode-row',bgMode],['sound-row',soundOn],['prewarn-row',preWarn],
    ['adjust-toggle-row',adjustOn],['propagate-row',propagate],['gym-toggle-row',gymEnabled]]
     .forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.classList.toggle('on',v); });
-  document.getElementById('adjust-row').style.display=adjustOn?'flex':'none';
-  document.getElementById('propagate-row').style.display=adjustOn?'flex':'none';
+  const showAdjust = adjustOn && document.body.classList.contains('advanced-mode');
+  document.getElementById('adjust-row').style.display=showAdjust?'flex':'none';
+  document.getElementById('propagate-row').style.display=showAdjust?'flex':'none';
   document.getElementById('gym-btn').style.display=gymEnabled?'':'none';
 }
 
@@ -1137,6 +1150,7 @@ if(!('wakeLock' in navigator)){
 }
 
 /* ---------- init ---------- */
+document.body.classList.toggle('advanced-mode', !!(window.Prefs && Prefs.getAdvancedMode()));
 buildPlan(); rebuildTimeline(); refreshHeader(); applyTheme(window.Prefs ? Prefs.getThemeKey() : themeKey); updateUI();
 (async()=>{
   if(window.QuemaSync) await QuemaSync.initSilent(); // sin botón propio: hereda la sesión ya persistida por Supabase, si existe

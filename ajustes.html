@@ -91,6 +91,15 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
     <div class="swatches" id="swatches"></div>
     <div id="rainbow-box"></div>
   </div>
+
+  <div class="set-group">
+    <div class="set-label">Avanzado</div>
+    <div class="toggle-row" id="advanced-row" onclick="toggleAdvanced()">
+      <span class="toggle-txt">Configuración avanzada
+        <span class="toggle-sub">Muestra opciones extra en Elíptica/Caminadora/Escaladora: cambiar equipo ahí mismo, ajuste en vivo, calibración de máquina, color y pantalla encendida por sesión</span></span>
+      <span class="toggle-sw"></span>
+    </div>
+  </div>
 </div>
 
 <script src="prefs.js"></script>
@@ -105,6 +114,7 @@ function syncToggleUI(){
   document.getElementById('sound-row').classList.toggle('on', Prefs.getSoundWarningOn());
   document.getElementById('screen-row').classList.toggle('on', Prefs.getKeepScreenOn());
   document.getElementById('fullscreen-row').classList.toggle('on', Prefs.getFullscreenPref());
+  document.getElementById('advanced-row').classList.toggle('on', Prefs.getAdvancedMode());
   if(!('wakeLock' in navigator)){
     document.getElementById('screen-row').classList.add('disabled');
   }
@@ -121,6 +131,7 @@ function toggleFullscreen(){
   syncToggleUI();
   if(next) Prefs.maybeRequestFullscreen(); // el toque en este mismo botón cuenta como gesto del usuario
 }
+function toggleAdvanced(){ Prefs.setAdvancedMode(!Prefs.getAdvancedMode()); syncToggleUI(); }
 
 /* ---------- rueda de colores + alternador de modo arcoíris ---------- */
 function renderSwatches(){

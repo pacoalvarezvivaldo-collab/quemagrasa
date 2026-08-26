@@ -43,6 +43,8 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 .mode-row .mode-chevron { color:var(--muted); font-size:15px; flex-shrink:0; }
 .mode-row.accent { border-color:var(--accent); background:var(--surface2); }
 .mode-row.accent .mode-sub { color:var(--accent); }
+.section-label { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); margin:10px 2px 0; }
 
 .flame { cursor:pointer; display:inline-block; -webkit-tap-highlight-color:transparent; }
 .egg-overlay { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center;
@@ -172,6 +174,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
       <span class="mode-text"><span class="mode-name">Ejercicio rápido</span><span class="mode-sub">10 min · 8 ejercicios al azar</span></span>
       <span class="mode-chevron">›</span>
     </a>
+    <div class="section-label">Cardio</div>
     <a class="mode-row" href="cardio.html?m=eliptica">
       <span class="mode-icon">🌀</span>
       <span class="mode-text"><span class="mode-name">Elíptica</span><span class="mode-sub">Timer HIIT</span></span>
