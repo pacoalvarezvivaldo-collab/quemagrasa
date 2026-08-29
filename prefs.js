@@ -12,7 +12,7 @@ const KEY_SOUND = 'qg_pref_sound', KEY_SCREEN = 'qg_pref_screen',
       KEY_FULLSCREEN = 'qg_pref_fullscreen', KEY_RAINBOW = 'qg_rainbow', KEY_THEME = 'qg_pref_theme',
       KEY_AVOIDED = 'qg_avoided_exercises', KEY_ADVANCED = 'qg_pref_advanced';
 
-/* ---------- temas de color: copia exacta de los 12 que ya existían en cardio.html ---------- */
+/* ---------- temas de color: única fuente de verdad, cardio.html delega aquí ---------- */
 const THEMES = {
   negro:   { sw:"#0d0d0f", v:{bg:"#0d0d0f",s1:"#18181c",s2:"#222228",tx:"#f0efe8",mu:"#777777",bd:"rgba(255,255,255,.08)",ac:"#EF9F27",at:"#000000"} },
   blanco:  { sw:"#ffffff", v:{bg:"#f4f4f2",s1:"#ffffff",s2:"#e9e9e6",tx:"#1a1a1a",mu:"#8a8a8a",bd:"rgba(0,0,0,.10)",ac:"#1a1a1a",at:"#ffffff"} },

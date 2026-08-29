@@ -192,8 +192,8 @@ function toggleRainbowMode(){
 syncToggleUI();
 renderSwatches();
 renderRainbowBox();
-try{ Prefs.applyThemeIfSet(); }catch(e){}
-try{ Prefs.applyRainbowIfOn(); }catch(e){}
+Prefs.applyThemeIfSet();
+Prefs.applyRainbowIfOn();
 document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
 </script>
 </body>
