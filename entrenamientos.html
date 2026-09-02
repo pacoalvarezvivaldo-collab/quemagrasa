@@ -184,6 +184,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <script src="sync.js"></script>
 <script src="streak.js"></script>
 <script src="prefs.js"></script>
+<script src="nav.js"></script>
 <script src="plan-engine.js"></script>
 <script>
 /* =====================================================================
@@ -248,6 +249,7 @@ const EXCLUDE_SLUGS = new Set([
 try{ Prefs.applyThemeIfSet(); }catch(e){}
 try{ Prefs.applyRainbowIfOn(); }catch(e){}
 document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
+Nav.render('entrenar');
 </script>
 </body>
 </html>
