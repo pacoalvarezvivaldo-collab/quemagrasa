@@ -45,12 +45,16 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   cursor:pointer; -webkit-tap-highlight-color:transparent; }
 .intro-note { font-size:11px; color:var(--muted); margin-top:14px; }
 
-.phase-label { display:inline-block; font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
-  padding:5px 16px; border-radius:20px; margin-bottom:10px; }
-.phase-label.work { background:rgba(239,159,39,.16); color:var(--accent); }
-.phase-label.rest { background:rgba(93,202,165,.16); color:var(--rest); }
-.play-progress { font-size:11px; color:var(--muted); margin-bottom:16px; font-family:'Space Mono',monospace; }
-.play-timer { font-family:'Space Mono',monospace; font-size:64px; font-weight:700; line-height:1; }
+.play-progress { font-size:11px; color:var(--muted); margin-bottom:14px; font-family:'Space Mono',monospace; }
+.ring { width:236px; height:236px; border-radius:50%; margin:0 auto; display:grid; place-items:center;
+  background:conic-gradient(var(--accent) var(--pct,0%), var(--surface2) 0); }
+.ring.rest { background:conic-gradient(var(--rest) var(--pct,0%), var(--surface2) 0); }
+.ring-inner { width:198px; height:198px; border-radius:50%; background:var(--bg);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; }
+.phase-label { font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+.phase-label.work { color:var(--accent); }
+.phase-label.rest { color:var(--rest); }
+.play-timer { font-family:'Space Mono',monospace; font-size:52px; font-weight:700; line-height:1; }
 .play-timer.work { color:var(--accent); }
 .play-timer.rest { color:var(--rest); }
 .play-gif { width:100%; max-width:260px; aspect-ratio:1/1; object-fit:contain; display:block; margin:18px auto 0; border-radius:16px; background:var(--surface2); }
@@ -104,9 +108,13 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 </div>
 
 <div class="screen" id="play-screen">
-  <div class="phase-label" id="phase-label">Trabajo</div>
   <div class="play-progress" id="play-progress"></div>
-  <div class="play-timer" id="play-timer">45</div>
+  <div class="ring" id="play-ring">
+    <div class="ring-inner">
+      <div class="phase-label" id="phase-label">Trabajo</div>
+      <div class="play-timer" id="play-timer">45</div>
+    </div>
+  </div>
   <img class="play-gif" id="play-gif" alt="">
   <div class="breathe-wrap" id="breathe-wrap">
     <div class="breathe-circle"></div>
@@ -186,6 +194,12 @@ let poolStatus = 'idle', poolPromise = null, ALL_EXERCISES = [];
 let session = [], idx = 0, phase = 'work';
 let phaseEndAt = 0, phaseWarned = false, timerId = null;
 let paused = false, pausedAt = 0;
+
+/* ---------- lógica pura (testeable sin DOM) ---------- */
+function ringPercent(left, dur){
+  return Math.max(0, Math.min(100, (1 - left/dur) * 100));
+}
+/* ---------- fin lógica pura ---------- */
 
 /* ---------- datos ---------- */
 async function ensurePool(){
@@ -420,6 +434,10 @@ function render(){
 
 function updateTimer(left){
   document.getElementById('play-timer').textContent = left;
+  const dur = phase==='work' ? WORK_SECONDS : REST_SECONDS;
+  const ring = document.getElementById('play-ring');
+  ring.className = 'ring ' + phase;
+  ring.style.setProperty('--pct', ringPercent(left, dur).toFixed(1) + '%');
 }
 
 /* ---------- init ---------- */
