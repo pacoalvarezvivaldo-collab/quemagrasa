@@ -459,6 +459,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 <script src="sync.js"></script>
 <script src="streak.js"></script>
 <script src="prefs.js"></script>
+<script src="nav.js"></script>
 <script>
 /* =====================================================================
    SPORTIUUM v3
@@ -810,8 +811,8 @@ function rebuildTimeline(){
 
 /* ---------- modo gimnasio ---------- */
 function openGym(){ if(!gymEnabled) return; gymOpen=true;
-  document.getElementById('gym-overlay').classList.add('show'); initAudio(); updateUI(); }
-function closeGym(){ gymOpen=false; document.getElementById('gym-overlay').classList.remove('show'); }
+  document.getElementById('gym-overlay').classList.add('show'); initAudio(); updateUI(); Nav.hide(); }
+function closeGym(){ gymOpen=false; document.getElementById('gym-overlay').classList.remove('show'); Nav.render('cardio'); }
 
 /* ---------- UI ---------- */
 function updateUI(){
@@ -981,6 +982,11 @@ document.getElementById('settings-overlay').addEventListener('click',function(e)
     b.innerHTML=`<span class="o-icon">${m.icon}</span><span class="o-name">${m.label}</span>`;
     b.onclick=()=>selectMachine(k); mg.appendChild(b);
   });
+  const runTile=document.createElement('div');
+  runTile.className='opt-btn';
+  runTile.innerHTML=`<span class="o-icon">🏃‍♂️</span><span class="o-name">Correr / Caminar</span>`;
+  runTile.onclick=()=>{ location.href='correr.html'; };
+  mg.appendChild(runTile);
   const sw=document.getElementById('swatches');
   (window.Prefs ? Prefs.getThemeList() : []).forEach(({key:k, swatch:color})=>{
     const s=document.createElement('div');
@@ -1169,6 +1175,7 @@ buildPlan(); rebuildTimeline(); refreshHeader(); applyTheme(window.Prefs ? Prefs
 
 try{ Prefs.applyRainbowIfOn(); }catch(e){}
 document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
+Nav.render('cardio');
 </script>
 </body>
 </html>
