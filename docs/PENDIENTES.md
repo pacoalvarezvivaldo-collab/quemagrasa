@@ -6,6 +6,16 @@ Lista viva de mejoras identificadas pero no aplicadas (encontradas en reviews, n
 
 - **Ajustes (sonido/pantalla/fullscreen/arcoíris):** cerrado, mergeado, sin pendientes. (`docs/superpowers/plans/2026-08-24-ajustes.md`)
 - **Personalización de color + descubrimiento del arcoíris vía Ajustes:** cerrado, mergeado (`4b59fd8`), sin bloqueantes. Pendientes de pulido abajo. (`docs/superpowers/plans/2026-08-24-ajustes-color.md`)
+- **Rediseño SPORTIUUM (marca, nav inferior, anillo en Rápido):** EN CURSO, sin mergear todavía. Ver "Retomar rediseño" abajo para dónde quedó exactamente.
+
+## Retomar rediseño SPORTIUUM (si se corta la sesión)
+
+- **Worktree:** `.claude/worktrees/rediseno-sportiuum` (rama `worktree-rediseno-sportiuum`), creado desde `origin/main` + cherry-pick de los commits de spec y plan que ya estaban en `main` local.
+- **Spec:** `docs/superpowers/specs/2026-09-02-rediseno-sportiuum-design.md` (aprobada por el usuario).
+- **Plan:** `docs/superpowers/plans/2026-09-02-rediseno-sportiuum.md` — 10 tareas, todas implementadas y con su revisión de tarea aprobada (ledger en `.superpowers/sdd/progress.md` dentro del worktree).
+- **Qué falta:** el revisor final de rama completa (dispatch con modelo opus, rango `c22acec..016d0cc`) está corriendo — falta leer su veredicto. Si aprueba sin hallazgos Críticos/Importantes → usar `superpowers:finishing-a-development-branch` para mergear a `main` y hacer push. Si encuentra hallazgos, corregirlos (un solo subagente con la lista completa) y volver a pedir revisión antes de mergear.
+- **Verificado manualmente en navegador** (servidor estático local, ya cerrado): nav inferior correcta en las 9 páginas, se oculta durante sesión activa de Rápido/Cardio/Correr, tarjeta "Correr / Caminar" funciona desde `cardio.html`, anillo circular de `rapido.html` se llena en sincronía con el reloj.
+- Commits del worktree: `4fef64a`(nav.js) → `3fc5897`(entrenar.html) → `79574bc`(index.html) → `d31cb3a`(entrenamientos+gimnasio) → `71f89e5`(cardio) → `01f9fa7`(correr) → `fc085f0`(rapido nav) → `1ceb4cb`(rapido anillo) → `016d0cc`(estadisticas+ajustes).
 
 ## Pendientes de pulido (no bloquean, encontrados en el review final del color)
 
