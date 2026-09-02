@@ -135,6 +135,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <script src="sync.js"></script>
 <script src="streak.js"></script>
 <script src="prefs.js"></script>
+<script src="nav.js"></script>
 <script>
 /* =====================================================================
    EJERCICIO RÁPIDO — 10 min cronometrados, 8 ejercicios al azar
@@ -251,6 +252,7 @@ document.body.addEventListener('click', initAudio, {once:true});
 function showScreen(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));
   document.getElementById(name+'-screen').classList.add('show');
+  if(name==='play') Nav.hide(); else Nav.render('entrenar');
 }
 function goHome(){ stopTimer(); releaseWakeLock(); location.href = 'index.html'; }
 
@@ -426,6 +428,7 @@ ensurePool();
 try{ Prefs.applyThemeIfSet(); }catch(e){}
 try{ Prefs.applyRainbowIfOn(); }catch(e){}
 document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
+Nav.render('entrenar');
 </script>
 </body>
 </html>
