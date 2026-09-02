@@ -25,6 +25,13 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   -webkit-user-select:none; user-select:none; touch-action:manipulation; }
 
 .wrap { max-width:480px; margin:0 auto; padding:calc(28px + var(--safe-top)) 20px calc(24px + var(--safe-bot)); }
+.hero-mark { width:40px; height:40px; border-radius:12px; background:var(--accent); position:relative;
+  margin:0 auto 10px; overflow:hidden; }
+.hero-mark i { position:absolute; left:8px; width:24px; height:6px; background:var(--accent-text); transform:skewX(-24deg); }
+.hero-mark i:nth-child(1) { top:9px; }
+.hero-mark i:nth-child(2) { top:17px; width:8px; }
+.hero-mark i:nth-child(3) { top:17px; left:24px; width:8px; }
+.hero-mark i:nth-child(4) { top:25px; }
 .hero { text-align:center; margin-bottom:26px; }
 .hero-title { font-size:26px; font-weight:800; letter-spacing:-.01em; }
 .hero-sub { font-size:12.5px; color:var(--muted); margin-top:6px; }
@@ -115,6 +122,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 
 <div class="wrap">
   <div class="hero">
+    <div class="hero-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <div class="hero-title"><span class="flame" id="flame">🔥</span> SPORTIUUM</div>
     <div class="hero-sub">Elige cómo quieres entrenar hoy</div>
     <div class="hero-streak" id="hero-streak"></div>
@@ -159,55 +167,9 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
         <div class="progress-bmi" id="progress-bmi"></div>
       </div>
     </div>
-    <a class="mode-row" href="entrenamientos.html">
-      <span class="mode-icon">🏠</span>
-      <span class="mode-text"><span class="mode-name">Casa</span><span class="mode-sub">Plan de 30 días</span></span>
-      <span class="mode-chevron">›</span>
-    </a>
-    <a class="mode-row" href="gimnasio.html">
-      <span class="mode-icon">🏢</span>
-      <span class="mode-text"><span class="mode-name">Gimnasio</span><span class="mode-sub">Plan de 30 días · con equipo</span></span>
-      <span class="mode-chevron">›</span>
-    </a>
     <a class="mode-row accent" href="rapido.html">
       <span class="mode-icon">⚡</span>
       <span class="mode-text"><span class="mode-name">Ejercicio rápido</span><span class="mode-sub">10 min · 8 ejercicios al azar</span></span>
-      <span class="mode-chevron">›</span>
-    </a>
-    <div class="section-label">Cardio</div>
-    <a class="mode-row" href="cardio.html?m=eliptica">
-      <span class="mode-icon">🌀</span>
-      <span class="mode-text"><span class="mode-name">Elíptica</span><span class="mode-sub">Timer HIIT</span></span>
-      <span class="mode-chevron">›</span>
-    </a>
-    <a class="mode-row" href="cardio.html?m=caminadora">
-      <span class="mode-icon">🏃</span>
-      <span class="mode-text"><span class="mode-name">Caminadora</span><span class="mode-sub">Timer HIIT · de gimnasio</span></span>
-      <span class="mode-chevron">›</span>
-    </a>
-    <a class="mode-row" href="cardio.html?m=caminadora_casa">
-      <span class="mode-icon">🏠</span>
-      <span class="mode-text"><span class="mode-name">Caminadora en Casa</span><span class="mode-sub">Timer HIIT · para la de casa, no de gimnasio</span></span>
-      <span class="mode-chevron">›</span>
-    </a>
-    <a class="mode-row" href="cardio.html?m=escaladora">
-      <span class="mode-icon">🪜</span>
-      <span class="mode-text"><span class="mode-name">Escaladora</span><span class="mode-sub">Timer HIIT</span></span>
-      <span class="mode-chevron">›</span>
-    </a>
-    <a class="mode-row" href="correr.html">
-      <span class="mode-icon">🏃‍♂️</span>
-      <span class="mode-text"><span class="mode-name">Correr / Caminar</span><span class="mode-sub">GPS · ruta · pasos</span></span>
-      <span class="mode-chevron">›</span>
-    </a>
-    <a class="mode-row" href="estadisticas.html">
-      <span class="mode-icon">📈</span>
-      <span class="mode-text"><span class="mode-name">Estadísticas</span><span class="mode-sub">Totales de los 5 modos</span></span>
-      <span class="mode-chevron">›</span>
-    </a>
-    <a class="mode-row" href="ajustes.html">
-      <span class="mode-icon">⚙️</span>
-      <span class="mode-text"><span class="mode-name">Ajustes</span><span class="mode-sub">Sonido, pantalla, color</span></span>
       <span class="mode-chevron">›</span>
     </a>
   </div>
@@ -237,6 +199,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <script src="weight-log.js"></script>
 <script src="streak.js"></script>
 <script src="prefs.js"></script>
+<script src="nav.js"></script>
 <script>
 /* ---------- Tu progreso: peso, estatura, meta, IMC ---------- */
 let progressOpen = false;
@@ -538,6 +501,7 @@ document.getElementById('flame').addEventListener('click', ()=>{
 /* aplica el tema elegido y el ciclo de color si el modo arcoíris ya está activo. */
 try{ Prefs.applyThemeIfSet(); }catch(e){}
 try{ Prefs.applyRainbowIfOn(); }catch(e){}
+Nav.render('inicio');
 
 document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
 
