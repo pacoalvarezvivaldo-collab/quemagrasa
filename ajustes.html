@@ -103,6 +103,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 </div>
 
 <script src="prefs.js"></script>
+<script src="nav.js"></script>
 <script>
 /* =====================================================================
    ajustes.html — pantalla centralizada de preferencias de interfaz.
@@ -195,6 +196,7 @@ renderRainbowBox();
 Prefs.applyThemeIfSet();
 Prefs.applyRainbowIfOn();
 document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
+Nav.render('ajustes');
 </script>
 </body>
 </html>
