@@ -203,6 +203,7 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <script src="weight-log.js"></script>
 <script src="streak.js"></script>
 <script src="prefs.js"></script>
+<script src="nav.js"></script>
 <script>
 /* =====================================================================
    CORRER / CAMINAR — rastreo GPS, mapa Leaflet+OSM, pasos estimados
@@ -294,6 +295,7 @@ document.addEventListener('visibilitychange', ()=>{
 function showScreen(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));
   document.getElementById(name+'-screen').classList.add('show');
+  if(name==='active') Nav.hide(); else Nav.render('cardio');
 }
 function backToSetup(){
   sessionSeq++; // invalida cualquier getCurrentPosition pendiente de una sesión abandonada
@@ -579,6 +581,7 @@ function renderHistory(){
 try{ Prefs.applyThemeIfSet(); }catch(e){}
 try{ Prefs.applyRainbowIfOn(); }catch(e){}
 document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
+Nav.render('cardio');
 </script>
 </body>
 </html>
