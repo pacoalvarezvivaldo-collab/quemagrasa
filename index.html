@@ -53,6 +53,12 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 .section-label { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
   color:var(--muted); margin:10px 2px 0; }
 
+.quick-cta { flex-direction:column; justify-content:center; text-align:center;
+  padding:48px 20px; border-width:2px; gap:10px; border-radius:26px; margin-top:6px; }
+.quick-cta-icon { font-size:48px; }
+.quick-cta-title { font-weight:800; font-size:23px; }
+.quick-cta-sub { font-size:13px; color:var(--accent); font-weight:700; }
+
 .flame { cursor:pointer; display:inline-block; -webkit-tap-highlight-color:transparent; }
 .egg-overlay { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center;
   z-index:300; opacity:0; pointer-events:none; transition:opacity .3s; padding:30px; text-align:center; }
@@ -69,15 +75,8 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
   animation:tap-ripple-anim .55s ease-out forwards; }
 @keyframes tap-ripple-anim { to { transform:translate(-50%,-50%) scale(16); opacity:0; } }
 
-/* ---- Tu progreso ---- */
-.progress-card.open { border-radius:14px 14px 0 0; border-color:var(--accent); }
-#progress-chevron { transition:transform .15s; }
-.progress-card.open #progress-chevron { transform:rotate(90deg); }
-
-.progress-panel { display:none; background:var(--surface); border:1.5px solid var(--border); border-top:none;
-  border-radius:0 0 14px 14px; padding:14px 16px 16px; margin-top:-8px; margin-bottom:8px; }
-.progress-panel.show { display:block; }
-
+/* ---- onboarding: pedir peso/estatura una sola vez al abrir la app (los datos
+   se ven y editan en Progreso — aquí solo se piden una vez al inicio) ---- */
 .field-label { font-size:12.5px; font-weight:700; display:block; margin-bottom:6px; }
 .field-input { background:var(--surface2); border:1px solid var(--border); color:var(--text);
   border-radius:10px; padding:9px 10px; font-family:'Space Mono',monospace; font-size:14px;
@@ -88,27 +87,6 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 .progress-btn-secondary { width:100%; background:var(--surface2); color:var(--text); border:1px solid var(--border);
   border-radius:12px; padding:12px; font-weight:700; font-family:'Syne',sans-serif; font-size:13px;
   cursor:pointer; -webkit-tap-highlight-color:transparent; margin-top:8px; }
-
-.progress-today-row { display:flex; gap:8px; align-items:flex-start; }
-.progress-today-row .field-input { margin-bottom:12px; }
-.progress-today-row .progress-btn { width:auto; padding:9px 16px; white-space:nowrap; }
-
-.progress-goal-link { font-size:12px; color:var(--muted); margin-bottom:12px; cursor:pointer;
-  -webkit-tap-highlight-color:transparent; }
-.progress-goal-form { background:var(--surface2); border:1px solid var(--border); border-radius:12px;
-  padding:12px; margin-bottom:14px; }
-
-.progress-summary { font-size:13px; line-height:1.6; margin-bottom:14px; }
-.progress-summary .status-line { color:var(--muted); font-size:12px; margin-top:2px; }
-
-.progress-chart-wrap { margin-bottom:14px; }
-.progress-chart-wrap svg { width:100%; height:auto; display:block; }
-
-.progress-bmi { display:none; align-items:center; gap:8px; font-family:'Space Mono',monospace;
-  font-size:13px; background:var(--surface2); border-radius:10px; padding:9px 12px; }
-.progress-bmi .bmi-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-
-/* ---- onboarding: pedir peso/estatura una sola vez al abrir la app ---- */
 .onboard-overlay { position:fixed; inset:0; background:rgba(0,0,0,.72); display:flex; align-items:center;
   justify-content:center; z-index:600; opacity:0; pointer-events:none; transition:opacity .2s; padding:20px; }
 .onboard-overlay.show { opacity:1; pointer-events:all; }
@@ -128,51 +106,11 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
     <div class="hero-streak" id="hero-streak"></div>
   </div>
 
-  <div class="mode-list">
-    <div class="mode-row progress-card" id="progress-card" onclick="toggleProgressPanel()">
-      <span class="mode-icon">📊</span>
-      <span class="mode-text"><span class="mode-name">Tu progreso</span><span class="mode-sub" id="progress-sub">Registra tu peso</span></span>
-      <span class="mode-chevron" id="progress-chevron">›</span>
-    </div>
-    <div class="progress-panel" id="progress-panel">
-      <div id="progress-first-form">
-        <label class="field-label">Peso (kg)</label>
-        <input class="field-input" id="progress-first-weight" type="number" inputmode="decimal" min="30" max="300" step="0.1" placeholder="70.0">
-        <label class="field-label">Estatura (cm)</label>
-        <input class="field-input" id="progress-first-height" type="number" inputmode="numeric" min="100" max="250" placeholder="170">
-        <button class="progress-btn" onclick="saveFirstEntry()">Guardar</button>
-      </div>
-      <div id="progress-data" style="display:none;">
-        <div class="progress-today-row">
-          <input class="field-input" id="progress-today-weight" type="number" inputmode="decimal" min="30" max="300" step="0.1">
-          <button class="progress-btn" onclick="saveTodayEntry()">Guardar</button>
-        </div>
-        <div class="progress-goal-link" id="progress-height-link" onclick="toggleHeightForm()"></div>
-        <div class="progress-goal-form" id="progress-height-form" style="display:none;">
-          <label class="field-label">Estatura (cm)</label>
-          <input class="field-input" id="progress-height-input" type="number" inputmode="numeric" min="100" max="250">
-          <button class="progress-btn" onclick="saveHeightEntry()">Guardar</button>
-        </div>
-        <div class="progress-goal-link" id="progress-goal-link" onclick="toggleGoalForm()"></div>
-        <div class="progress-goal-form" id="progress-goal-form" style="display:none;">
-          <label class="field-label">Peso meta (kg)</label>
-          <input class="field-input" id="progress-goal-weight" type="number" inputmode="decimal" min="30" max="300" step="0.1">
-          <label class="field-label">Fecha meta</label>
-          <input class="field-input" id="progress-goal-date" type="date">
-          <button class="progress-btn" onclick="saveGoalEntry()">Guardar meta</button>
-          <button class="progress-btn-secondary" id="progress-goal-remove" onclick="removeGoalEntry()" style="display:none;">Quitar meta</button>
-        </div>
-        <div class="progress-summary" id="progress-summary"></div>
-        <div class="progress-chart-wrap" id="progress-chart-wrap"></div>
-        <div class="progress-bmi" id="progress-bmi"></div>
-      </div>
-    </div>
-    <a class="mode-row accent" href="rapido.html">
-      <span class="mode-icon">⚡</span>
-      <span class="mode-text"><span class="mode-name">Ejercicio rápido</span><span class="mode-sub">10 min · 8 ejercicios al azar</span></span>
-      <span class="mode-chevron">›</span>
-    </a>
-  </div>
+  <a class="mode-row accent quick-cta" href="rapido.html">
+    <span class="quick-cta-icon">⚡</span>
+    <span class="quick-cta-title">Ejercicio rápido</span>
+    <span class="quick-cta-sub">10 min · 8 ejercicios al azar</span>
+  </a>
 </div>
 
 <div class="onboard-overlay" id="onboard-overlay">
@@ -201,33 +139,10 @@ body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-
 <script src="prefs.js"></script>
 <script src="nav.js"></script>
 <script>
-/* ---------- Tu progreso: peso, estatura, meta, IMC ---------- */
-let progressOpen = false;
-
-function toggleProgressPanel(){
-  progressOpen = !progressOpen;
-  document.getElementById('progress-card').classList.toggle('open', progressOpen);
-  document.getElementById('progress-panel').classList.toggle('show', progressOpen);
-}
-
-function saveFirstEntry(){
-  const w = parseFloat(document.getElementById('progress-first-weight').value);
-  const h = parseFloat(document.getElementById('progress-first-height').value);
-  if(isNaN(w) || w<30 || w>300 || isNaN(h) || h<100 || h>250){
-    alert('Ingresa un peso (30-300 kg) y estatura (100-250 cm) válidos.');
-    return false;
-  }
-  WeightLog.saveTodayWeight(w);
-  WeightLog.saveHeightCm(h);
-  if(window.QuemaSync){
-    QuemaSync.pushWeightEntry({ date: WeightLog.todayStr(), weightKg: w });
-    QuemaSync.pushUserState({ height_cm: h });
-  }
-  renderProgress();
-  return true;
-}
-
-/* ---------- onboarding: pedir peso/estatura una sola vez ---------- */
+/* ---------- onboarding: pedir peso/estatura una sola vez al abrir la app.
+   Los datos se guardan aquí pero se ven/editan en Progreso — ese widget se
+   movió ahí porque no tenía sentido en Inicio, justo junto a las demás
+   estadísticas. ---------- */
 const KEY_ONBOARD_SEEN = 'qg_onboard_seen';
 function closeOnboarding(){
   try{ localStorage.setItem(KEY_ONBOARD_SEEN, '1'); }catch(e){}
@@ -235,9 +150,18 @@ function closeOnboarding(){
 }
 function skipOnboarding(){ closeOnboarding(); }
 function saveOnboardEntry(){
-  document.getElementById('progress-first-weight').value = document.getElementById('onboard-weight').value;
-  document.getElementById('progress-first-height').value = document.getElementById('onboard-height').value;
-  if(saveFirstEntry() === false) return; // datos inválidos: deja el modal abierto para corregir
+  const w = parseFloat(document.getElementById('onboard-weight').value);
+  const h = parseFloat(document.getElementById('onboard-height').value);
+  if(isNaN(w) || w<30 || w>300 || isNaN(h) || h<100 || h>250){
+    alert('Ingresa un peso (30-300 kg) y estatura (100-250 cm) válidos.');
+    return;
+  }
+  WeightLog.saveTodayWeight(w);
+  WeightLog.saveHeightCm(h);
+  if(window.QuemaSync){
+    QuemaSync.pushWeightEntry({ date: WeightLog.todayStr(), weightKg: w });
+    QuemaSync.pushUserState({ height_cm: h });
+  }
   closeOnboarding();
 }
 function maybeShowOnboarding(){
@@ -247,190 +171,6 @@ function maybeShowOnboarding(){
   }catch(e){ return; }
   document.getElementById('onboard-overlay').classList.add('show');
 }
-
-function saveTodayEntry(){
-  const w = parseFloat(document.getElementById('progress-today-weight').value);
-  if(isNaN(w) || w<30 || w>300){
-    alert('Ingresa un peso válido (30-300 kg).');
-    return;
-  }
-  WeightLog.saveTodayWeight(w);
-  if(window.QuemaSync) QuemaSync.pushWeightEntry({ date: WeightLog.todayStr(), weightKg: w });
-  renderProgress();
-}
-
-function renderProgress(){
-  const log = WeightLog.getLog();
-  const sub = document.getElementById('progress-sub');
-  const firstForm = document.getElementById('progress-first-form');
-  const data = document.getElementById('progress-data');
-
-  if(!log.length){
-    sub.textContent = 'Registra tu peso';
-    firstForm.style.display = '';
-    data.style.display = 'none';
-    return;
-  }
-
-  firstForm.style.display = 'none';
-  data.style.display = '';
-  const last = log[log.length-1];
-  sub.textContent = `Último registro: ${last.weightKg} kg`;
-  document.getElementById('progress-today-weight').value = last.weightKg;
-
-  renderSummary(log);
-  renderHeightLink();
-  renderGoalLink();
-  renderChart(log);
-  renderBmi(last.weightKg);
-}
-
-function renderHeightLink(){
-  const link = document.getElementById('progress-height-link');
-  const h = WeightLog.getHeightCm();
-  link.textContent = h ? `📏 ${h} cm · editar` : '📏 agregar estatura';
-  if(h) document.getElementById('progress-height-input').value = h;
-}
-
-function toggleHeightForm(){
-  const form = document.getElementById('progress-height-form');
-  form.style.display = form.style.display === 'none' ? '' : 'none';
-}
-
-function saveHeightEntry(){
-  const h = parseFloat(document.getElementById('progress-height-input').value);
-  if(isNaN(h) || h<100 || h>250){
-    alert('Ingresa una estatura válida (100-250 cm).');
-    return;
-  }
-  WeightLog.saveHeightCm(h);
-  if(window.QuemaSync) QuemaSync.pushUserState({ height_cm: h });
-  document.getElementById('progress-height-form').style.display = 'none';
-  renderProgress();
-}
-
-function renderBmi(weightKg){
-  const el = document.getElementById('progress-bmi');
-  const heightCm = WeightLog.getHeightCm();
-  if(!heightCm){ el.style.display = 'none'; return; }
-  const bmi = WeightLog.bmiValue(weightKg, heightCm);
-  const band = WeightLog.bmiBand(bmi);
-  el.style.display = 'flex';
-  el.innerHTML = `<span class="bmi-dot" style="background:${band.color}"></span> IMC ${bmi} · ${band.label}`;
-}
-
-function renderChart(log){
-  const wrap = document.getElementById('progress-chart-wrap');
-  if(log.length < 2){ wrap.innerHTML = ''; return; }
-  wrap.innerHTML = buildChartSvg(log, WeightLog.getGoal());
-}
-
-function buildChartSvg(log, goal){
-  const W = 280, H = 140, PAD = 8;
-  const today = WeightLog.todayStr();
-  const firstDate = log[0].date;
-  let lastDate = log[log.length-1].date;
-  if(goal && goal.date > lastDate) lastDate = goal.date;
-  if(today > lastDate) lastDate = today;
-
-  const weights = log.map(e=>e.weightKg);
-  if(goal) weights.push(goal.weightKg);
-  const minW = Math.min(...weights), maxW = Math.max(...weights);
-  const span = Math.max(0.5, maxW - minW);
-  const yMin = minW - span*0.1, yMax = maxW + span*0.1;
-  const totalDays = Math.max(1, WeightLog.daysBetween(firstDate, lastDate));
-
-  const xScale = dateStr => PAD + (WeightLog.daysBetween(firstDate, dateStr)/totalDays) * (W - PAD*2);
-  const yScale = w => H - PAD - ((w - yMin)/(yMax - yMin)) * (H - PAD*2);
-
-  const realPts = log.map(e => `${xScale(e.date).toFixed(1)},${yScale(e.weightKg).toFixed(1)}`).join(' ');
-  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
-  svg += `<polyline points="${realPts}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
-  if(goal){
-    const gx1 = xScale(firstDate).toFixed(1), gy1 = yScale(log[0].weightKg).toFixed(1);
-    const gx2 = xScale(goal.date).toFixed(1), gy2 = yScale(goal.weightKg).toFixed(1);
-    svg += `<line x1="${gx1}" y1="${gy1}" x2="${gx2}" y2="${gy2}" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
-  }
-  svg += `<text x="${PAD}" y="10" font-size="8" fill="var(--muted)">${yMax.toFixed(1)} kg</text>`;
-  svg += `<text x="${PAD}" y="${H-2}" font-size="8" fill="var(--muted)">${yMin.toFixed(1)} kg</text>`;
-  svg += `</svg>`;
-  return svg;
-}
-
-function renderGoalLink(){
-  const link = document.getElementById('progress-goal-link');
-  const goal = WeightLog.getGoal();
-  const removeBtn = document.getElementById('progress-goal-remove');
-  if(goal){
-    link.textContent = `🎯 ${goal.weightKg}kg para ${fmtDate(goal.date)} · editar`;
-    document.getElementById('progress-goal-weight').value = goal.weightKg;
-    document.getElementById('progress-goal-date').value = goal.date;
-    removeBtn.style.display = '';
-  } else {
-    link.textContent = '🎯 poner meta';
-    removeBtn.style.display = 'none';
-  }
-}
-
-function toggleGoalForm(){
-  const form = document.getElementById('progress-goal-form');
-  document.getElementById('progress-goal-date').min = WeightLog.todayStr();
-  form.style.display = form.style.display === 'none' ? '' : 'none';
-}
-
-function saveGoalEntry(){
-  const w = parseFloat(document.getElementById('progress-goal-weight').value);
-  const d = document.getElementById('progress-goal-date').value;
-  if(isNaN(w) || w<30 || w>300 || !d || d <= WeightLog.todayStr()){
-    alert('Ingresa un peso meta (30-300 kg) y una fecha futura válidos.');
-    return;
-  }
-  WeightLog.saveGoal(w, d);
-  if(window.QuemaSync) QuemaSync.pushUserState({ goal_weight_kg: w, goal_date: d });
-  document.getElementById('progress-goal-form').style.display = 'none';
-  renderProgress();
-}
-
-function removeGoalEntry(){
-  WeightLog.clearGoal();
-  if(window.QuemaSync) QuemaSync.pushUserState({ goal_weight_kg: null, goal_date: null });
-  document.getElementById('progress-goal-form').style.display = 'none';
-  renderProgress();
-}
-
-function fmtDate(dateStr){
-  const [y,m,d] = dateStr.split('-');
-  return `${d}/${m}`;
-}
-
-function renderSummary(log){
-  const s = WeightLog.weightChangeSummary(log);
-  const el = document.getElementById('progress-summary');
-  if(!s){ el.innerHTML = ''; return; }
-  const verb = s.deltaKg >= 0 ? 'bajado' : 'subido';
-  const abs = Math.abs(s.deltaKg);
-  let html = `Has ${verb} ${abs.toFixed(1)} kg desde el ${fmtDate(s.startDate)} `+
-    `(inicio: ${s.startWeight} kg → hoy: ${s.currentWeight} kg)`;
-
-  const goal = WeightLog.getGoal();
-  if(goal){
-    const status = WeightLog.progressStatus(WeightLog.todayStr(), s.startDate, s.startWeight, goal.date, goal.weightKg, s.currentWeight);
-    let line;
-    if(status.phase === 'done'){
-      line = status.met ? 'Meta cumplida 🎉' : `No se alcanzó la meta — te quedaste a ${status.diffKg.toFixed(1)} kg`;
-    } else if(status.phase === 'ontrack'){
-      line = 'Vas a tiempo';
-    } else if(status.phase === 'ahead'){
-      line = `Vas ${status.diffKg.toFixed(1)} kg adelantado`;
-    } else {
-      line = `Vas ${status.diffKg.toFixed(1)} kg atrasado respecto al plan`;
-    }
-    html += `<div class="status-line">${line}</div>`;
-  }
-  el.innerHTML = html;
-}
-
-try{ renderProgress(); }catch(e){}
 try{ maybeShowOnboarding(); }catch(e){}
 
 function renderStreak(){
@@ -446,34 +186,17 @@ function renderStreak(){
 }
 try{ renderStreak(); }catch(e){}
 
-/* al cargar, si ya hay sesión de sync activa (iniciada desde Casa o Correr), trae lo del
-   servidor y lo fusiona con lo local — sin sesión, esto no hace ninguna llamada de red. */
+/* al cargar, si ya hay sesión de sync activa (iniciada desde Casa o Correr), trae la
+   racha del servidor y la fusiona con la local — sin sesión, esto no hace ninguna
+   llamada de red. El peso/estatura/meta ahora se sincronizan desde Progreso, que es
+   donde se muestran y editan. */
 async function syncPullOnLoad(){
   if(!window.QuemaSync) return;
   await QuemaSync.initSilent(); // sin botón propio: hereda la sesión ya persistida por Supabase, si existe
   if(!QuemaSync.isSignedIn()) return;
-
-  // snapshots de antes de la red: si el usuario edita algo mientras esperamos,
-  // no lo pisamos con la respuesta remota (que quedó desactualizada) — se sincroniza sola en la próxima carga
-  const heightBefore = WeightLog.getHeightCm();
-  const goalBefore = WeightLog.getGoal();
-  const logBefore = WeightLog.getLog();
-
   const remote = await QuemaSync.pullUserState();
-  if(remote){
-    if(remote.heightCm != null && WeightLog.getHeightCm() === heightBefore) WeightLog.saveHeightCm(remote.heightCm);
-    const goalNow = WeightLog.getGoal();
-    const goalKey = g => g ? `${g.weightKg}|${g.date}` : null;
-    if(goalKey(goalNow) === goalKey(goalBefore)){
-      if(remote.goalWeightKg != null && remote.goalDate) WeightLog.saveGoal(remote.goalWeightKg, remote.goalDate);
-      else WeightLog.clearGoal(); // el remoto es la fuente de verdad de la meta: si allá ya no hay meta, se limpia aquí también
-    }
-    if(remote.activityLog && remote.activityLog.length) Streak.mergeRemoteLog(remote.activityLog);
-  }
-  const mergedWeightLog = await QuemaSync.pullAndMergeWeightLog(logBefore);
-  if(JSON.stringify(WeightLog.getLog()) === JSON.stringify(logBefore)) WeightLog.mergeRemoteLog(mergedWeightLog);
+  if(remote && remote.activityLog && remote.activityLog.length) Streak.mergeRemoteLog(remote.activityLog);
   await QuemaSync.pushUserState({ activity_log: Streak.getLog() });
-  renderProgress();
   renderStreak();
 }
 if(window.QuemaSync) syncPullOnLoad().catch(()=>{});
@@ -507,7 +230,7 @@ document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }c
 
 /* toque en zona vacía (fuera de botones/links): ripple ambient, sin acción */
 document.addEventListener('click', e=>{
-  if(e.target.closest('a, button, input, .progress-card, .progress-goal-link')) return;
+  if(e.target.closest('a, button, input')) return;
   const r = document.createElement('div');
   r.className = 'tap-ripple';
   r.style.left = e.clientX + 'px';
@@ -517,7 +240,7 @@ document.addEventListener('click', e=>{
   registerEmptyTap();
 });
 
-window.addEventListener('pageshow', e=>{ if(e.persisted){ try{ renderProgress(); }catch(err){} try{ renderStreak(); }catch(err){} } });
+window.addEventListener('pageshow', e=>{ if(e.persisted){ try{ renderStreak(); }catch(err){} } });
 
 /* easter egg oculto: 60 taps seguidos en zona vacía → los botones "caen" y se pueden arrastrar */
 let emptyTapCount = 0, emptyTapResetTimer = null;
