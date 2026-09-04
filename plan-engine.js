@@ -156,7 +156,7 @@ function showScreen(name){
   navEpoch++;
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));
   document.getElementById(name+'-screen').classList.add('show');
-  if(name==='player') Nav.hide(); else Nav.render('entrenar');
+  if(window.Nav){ if(name==='player') Nav.hide(); else Nav.render('entrenar'); }
 }
 
 function openLevelPicker(){
