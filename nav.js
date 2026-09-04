@@ -13,7 +13,7 @@ const TABS = [
     icon:'<polygon points="11,2 21,10 17,10 17,20 5,20 5,10 1,10"></polygon>' },
   { key:'entrenar', label:'Entrenar', href:'entrenar.html',
     icon:'<rect x="1" y="7" width="4" height="8" rx="1.2"></rect><rect x="17" y="7" width="4" height="8" rx="1.2"></rect><rect x="5" y="9" width="12" height="4"></rect>' },
-  { key:'cardio', label:'Cardio', href:'cardio.html',
+  { key:'cardio', label:'Cardio', href:'cardio-inicio.html',
     icon:'<circle cx="11" cy="11" r="9"></circle><circle cx="11" cy="11" r="3.6" fill="var(--bg)"></circle>' },
   { key:'progreso', label:'Progreso', href:'estadisticas.html',
     icon:'<rect x="2" y="12" width="4" height="8"></rect><rect x="9" y="7" width="4" height="13"></rect><rect x="16" y="2" width="4" height="18"></rect>' },
@@ -79,7 +79,7 @@ function activeKeyForPath(pathname){
   const MAP = {
     'index.html':'inicio',
     'entrenar.html':'entrenar', 'entrenamientos.html':'entrenar', 'gimnasio.html':'entrenar', 'rapido.html':'entrenar',
-    'cardio.html':'cardio', 'correr.html':'cardio',
+    'cardio-inicio.html':'cardio', 'cardio.html':'cardio', 'correr.html':'cardio',
     'estadisticas.html':'progreso',
     'ajustes.html':'ajustes'
   };

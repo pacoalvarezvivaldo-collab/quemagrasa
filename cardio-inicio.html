@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cardio">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d0d0f">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
+<title>Cardio · SPORTIUUM</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+:root {
+  --bg:#0d0d0f; --surface:#18181c; --surface2:#222228;
+  --border:rgba(255,255,255,0.08); --text:#f0efe8; --muted:#777;
+  --accent:#EF9F27; --accent-text:#000;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+html, body { height:100%; background:var(--bg); overscroll-behavior:none; }
+body { color:var(--text); font-family:'Syne',sans-serif; padding-top:var(--safe-top);
+  -webkit-user-select:none; user-select:none; touch-action:manipulation; }
+
+.topbar { display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px 9px 18px; border-bottom:1px solid var(--border); }
+.topbar-title { font-size:13px; font-weight:800; letter-spacing:.03em; }
+.gear-btn { background:var(--surface2); border:1px solid var(--border); color:var(--text);
+  width:34px; height:34px; border-radius:10px; font-size:15px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; text-decoration:none;
+  -webkit-tap-highlight-color:transparent; }
+
+.wrap { max-width:480px; margin:0 auto; padding:20px calc(20px + env(safe-area-inset-right,0px)) calc(24px + var(--safe-bot)); }
+
+.mode-list { display:flex; flex-direction:column; gap:8px; }
+.mode-row { display:flex; align-items:center; gap:14px; width:100%; background:var(--surface);
+  border:1.5px solid var(--border); border-radius:14px; padding:14px 16px; text-align:left;
+  cursor:pointer; color:var(--text); text-decoration:none; font-family:'Syne',sans-serif;
+  -webkit-tap-highlight-color:transparent; transition:border-color .15s; }
+.mode-row:active { border-color:var(--accent); }
+.mode-row .mode-icon { font-size:23px; flex-shrink:0; width:30px; text-align:center; }
+.mode-row .mode-text { flex:1; min-width:0; }
+.mode-row .mode-name { font-weight:800; font-size:15px; display:block; }
+.mode-row .mode-sub { font-size:11px; color:var(--muted); margin-top:2px; display:block; }
+.mode-row .mode-chevron { color:var(--muted); font-size:15px; flex-shrink:0; }
+.mode-row.accent { border-color:var(--accent); background:var(--surface2); }
+.mode-row.accent .mode-sub { color:var(--accent); }
+.section-label { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); margin:14px 2px 8px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="gear-btn" href="index.html" title="Volver al inicio">←</a>
+  <span class="topbar-title">🌀 Cardio</span>
+  <span style="width:34px"></span>
+</div>
+
+<div class="wrap">
+  <div class="section-label">Máquinas</div>
+  <div class="mode-list">
+    <a class="mode-row" href="cardio.html?m=caminadora_casa">
+      <span class="mode-icon">🏠</span>
+      <span class="mode-text"><span class="mode-name">Caminadora en Casa</span><span class="mode-sub">Solo velocidad · sin niveles</span></span>
+      <span class="mode-chevron">›</span>
+    </a>
+    <a class="mode-row" href="cardio.html?m=caminadora">
+      <span class="mode-icon">🏃</span>
+      <span class="mode-text"><span class="mode-name">Caminadora Gimnasio</span><span class="mode-sub">Velocidad + inclinación</span></span>
+      <span class="mode-chevron">›</span>
+    </a>
+    <a class="mode-row" href="cardio.html?m=escaladora">
+      <span class="mode-icon">🪜</span>
+      <span class="mode-text"><span class="mode-name">Escaladora</span><span class="mode-sub">Nivel + pasos/min</span></span>
+      <span class="mode-chevron">›</span>
+    </a>
+    <a class="mode-row" href="cardio.html?m=eliptica">
+      <span class="mode-icon">🌀</span>
+      <span class="mode-text"><span class="mode-name">Elíptica</span><span class="mode-sub">Inclinación + resistencia</span></span>
+      <span class="mode-chevron">›</span>
+    </a>
+  </div>
+
+  <div class="section-label">Aire libre</div>
+  <div class="mode-list">
+    <a class="mode-row accent" href="correr.html">
+      <span class="mode-icon">🏃‍♂️</span>
+      <span class="mode-text"><span class="mode-name">Correr / Caminar</span><span class="mode-sub">GPS · distancia y ritmo</span></span>
+      <span class="mode-chevron">›</span>
+    </a>
+  </div>
+</div>
+
+<script src="prefs.js"></script>
+<script src="nav.js"></script>
+<script>
+try{ Prefs.applyThemeIfSet(); }catch(e){}
+try{ Prefs.applyRainbowIfOn(); }catch(e){}
+document.addEventListener('click', ()=>{ try{ Prefs.maybeRequestFullscreen(); }catch(e){} }, {once:true});
+Nav.render('cardio');
+</script>
+</body>
+</html>

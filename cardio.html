@@ -58,6 +58,10 @@ body { color:var(--text); font-family:'Syne',sans-serif; display:flex; flex-dire
 .current-name { font-size:15px; font-weight:800; }
 .current-time { font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); }
 .current-params { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.current-params.no-p2 { grid-template-columns:1fr 1fr; }
+.current-params.no-p2 #param-box-p2 { display:none; }
+.adjust-row.no-p2 #adj-box-2 { display:none; }
+.gym-params.no-p2 #gym-box-p2 { display:none; }
 .param-box { background:var(--surface2); border-radius:10px; padding:7px 4px; text-align:center; }
 .param-val { font-family:'Space Mono',monospace; font-size:19px; font-weight:700; }
 .param-unit { font-family:'Space Mono',monospace; font-size:11px; font-weight:400; opacity:.6; }
@@ -237,7 +241,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
   <span class="topbar-title" id="topbar-title">🌀 Elíptica · Medio · 30′</span>
   <div class="topbar-right">
     <span class="topbar-total" id="total-elapsed">00:00 / 30:00</span>
-    <a class="gear-btn" href="index.html" title="Volver al inicio" style="display:flex;align-items:center;justify-content:center;text-decoration:none;">🏠</a>
+    <a class="gear-btn" href="cardio-inicio.html" title="Volver a Cardio" style="display:flex;align-items:center;justify-content:center;text-decoration:none;">🏠</a>
     <button class="gear-btn" id="gym-btn" onclick="openGym()">⛶</button>
     <button class="gear-btn" onclick="openSettings()">⚙</button>
   </div>
@@ -270,9 +274,9 @@ input, textarea { -webkit-user-select:text; user-select:text; }
       <div class="current-name" id="current-name">Calentamiento</div>
       <div class="current-time" id="current-time-range">0:00–3:00</div>
     </div>
-    <div class="current-params">
+    <div class="current-params" id="current-params">
       <div class="param-box"><div class="param-val" id="param-p1">5</div><div class="param-lbl" id="param-p1-lbl">Inclinación</div></div>
-      <div class="param-box"><div class="param-val" id="param-p2">2</div><div class="param-lbl" id="param-p2-lbl">Resistencia</div></div>
+      <div class="param-box" id="param-box-p2"><div class="param-val" id="param-p2">2</div><div class="param-lbl" id="param-p2-lbl">Resistencia</div></div>
       <div class="param-box"><div class="param-val" id="param-pace" style="font-size:13px;padding-top:4px">Lento</div><div class="param-lbl">Ritmo</div></div>
     </div>
   </div>
@@ -283,7 +287,7 @@ input, textarea { -webkit-user-select:text; user-select:text; }
       <span class="adj-mid" id="adj-lbl-1">Inclinación</span>
       <button class="adj-btn" onclick="adjustParam(1,1)">+</button>
     </div>
-    <div class="adj">
+    <div class="adj" id="adj-box-2">
       <button class="adj-btn" onclick="adjustParam(2,-1)">−</button>
       <span class="adj-mid" id="adj-lbl-2">Resistencia</span>
       <button class="adj-btn" onclick="adjustParam(2,1)">+</button>
@@ -322,9 +326,9 @@ input, textarea { -webkit-user-select:text; user-select:text; }
     <div class="gym-phase" id="gym-phase">Calentamiento</div>
     <div class="gym-timer" id="gym-timer">3:00</div>
     <div class="gym-sub" id="gym-sub">00:00 / 30:00 · 0 kcal</div>
-    <div class="gym-params">
+    <div class="gym-params" id="gym-params">
       <div class="gym-p"><div class="gym-p-val" id="gym-p1">5</div><div class="gym-p-lbl" id="gym-p1-lbl">Inclinación</div></div>
-      <div class="gym-p"><div class="gym-p-val" id="gym-p2">2</div><div class="gym-p-lbl" id="gym-p2-lbl">Resistencia</div></div>
+      <div class="gym-p" id="gym-box-p2"><div class="gym-p-val" id="gym-p2">2</div><div class="gym-p-lbl" id="gym-p2-lbl">Resistencia</div></div>
     </div>
     <div class="gym-next" id="gym-next">Sigue: Zona aeróbica</div>
     <div class="gym-bar"><div class="gym-bar-fill" id="gym-bar-fill"></div></div>
@@ -506,11 +510,11 @@ const MACHINES = {
     pace:{ easy:"Caminar", moderate:"Trote", intense:"Correr", recovery:"Caminar" }
   },
   caminadora_casa: {
-    /* Misma mecánica que "Caminadora" (gimnasio) — la calibración de "Límites de tu máquina"
-       ya normaliza todo como % del rango real de CADA quien, así que no hace falta un motor
-       aparte. Existe como entrada separada solo para que la persona con caminadora casera la
-       encuentre por su nombre en vez de adivinar si "Caminadora" es la de gimnasio. */
-    label:"Caminadora en Casa", icon:"🏠",
+    /* Caminadora casera típica: solo controla velocidad, sin motor de inclinación.
+       hasP2:false oculta el segundo parámetro (inclinación) en toda la UI — el motor
+       interno igual calcula p2 (reutiliza frac/ramp de "Caminadora") pero nunca se
+       muestra ni se puede ajustar, así los datos se quedan simples a propósito. */
+    label:"Caminadora en Casa", icon:"🏠", hasP2:false,
     aeroName:"Trote aeróbico", sprintName:"⚡ Sprint",
     p1lbl:"Velocidad", u1:"km/h", min1:4, max1:20, dec1:1, badge1:v=>v+"km/h",
     p2lbl:"Inclinación", u2:"%",  min2:0, max2:15, dec2:0, badge2:v=>v+"%",
@@ -755,7 +759,8 @@ function refreshBadges(){
   INTERVALS.forEach((iv,i)=>{
     const el=document.getElementById('tl-'+i); if(!el) return;
     const b=el.querySelectorAll('.tl-badge');
-    if(b.length===2){ b[0].textContent=m.badge1(iv.p1); b[1].textContent=m.badge2(iv.p2); }
+    if(b[0]) b[0].textContent=m.badge1(iv.p1);
+    if(b[1]) b[1].textContent=m.badge2(iv.p2);
   });
 }
 
@@ -801,7 +806,7 @@ function rebuildTimeline(){
     el.innerHTML=`<div class="tl-dot" style="background:${iv.color}"></div>
       <div class="tl-min">${fmt2(iv.start)}</div>
       <div class="tl-name">${iv.name}</div>
-      <div class="tl-badges"><span class="tl-badge">${m.badge1(iv.p1)}</span><span class="tl-badge">${m.badge2(iv.p2)}</span></div>`;
+      <div class="tl-badges"><span class="tl-badge">${m.badge1(iv.p1)}</span>${m.hasP2===false?'':`<span class="tl-badge">${m.badge2(iv.p2)}</span>`}</div>`;
     tlList.appendChild(el);
   });
   programmaticScroll=true; tlScroll.scrollTop=0;
@@ -837,7 +842,8 @@ function updateUI(){
   const nc=document.getElementById('next-card');
   if(next){
     document.getElementById('next-name').textContent=next.name;
-    document.getElementById('next-params').textContent=`${m.badge1(next.p1)} · ${m.badge2(next.p2)}`;
+    document.getElementById('next-params').textContent = m.hasP2===false
+      ? m.badge1(next.p1) : `${m.badge1(next.p1)} · ${m.badge2(next.p2)}`;
     nc.style.display='';
   } else nc.style.display='none';
 
@@ -883,7 +889,8 @@ function buildCalib(){
   const m=MACHINES[machineKey], box=document.getElementById('calib-box');
   if(!box) return;
   box.innerHTML='';
-  [['max1','p1lbl','u1'],['max2','p2lbl','u2']].forEach(([mk,lk,uk])=>{
+  const fields = m.hasP2===false ? [['max1','p1lbl','u1']] : [['max1','p1lbl','u1'],['max2','p2lbl','u2']];
+  fields.forEach(([mk,lk,uk])=>{
     const row=document.createElement('div');
     row.className='weight-row'; row.style.marginBottom='8px';
     row.innerHTML=`<span style="font-size:12px;font-weight:700;flex:1">${m[lk]} máx.</span>
@@ -906,6 +913,13 @@ function refreshHeader(){
   document.getElementById('topbar-title').textContent=`${m.icon} ${m.label} · ${L.label} · ${durKey}′`;
   document.getElementById('plan-title').textContent=`Programa · ${TOTAL_SPRINTS} sprints`;
   buildCalib();
+  applyP2Visibility(m);
+}
+function applyP2Visibility(m){
+  const noP2 = m.hasP2===false;
+  document.getElementById('current-params').classList.toggle('no-p2', noP2);
+  document.getElementById('adjust-row').classList.toggle('no-p2', noP2);
+  document.getElementById('gym-params').classList.toggle('no-p2', noP2);
 }
 
 /* ---------- configuración ---------- */
